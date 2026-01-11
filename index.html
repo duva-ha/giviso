@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartTeacher - Đa Collection Firebase</title>
+    <title>SmartTeacher - Cập nhật giao diện</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -21,11 +21,16 @@
         </div>
         <nav class="flex-1 mt-6">
             <button onclick="showTab('dashboard')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-dashboard">
-                <i data-lucide="layout-dashboard" class="mr-3 w-5"></i> Bảng điều khiển
+                <i data-lucide="calendar" class="mr-3 w-5"></i> Lịch công tác tuần
             </button>
-            <button onclick="showTab('chuyen-mon')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-chuyen-mon">
-                <i data-lucide="book-open" class="mr-3 w-5"></i> Chuyên môn
+            <div class="px-6 py-2 text-xs font-semibold text-indigo-400 uppercase tracking-wider">Chuyên môn</div>
+            <button onclick="showTab('ct-chuyen-mon')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-ct-chuyen-mon">
+                <i data-lucide="book-marked" class="mr-3 w-5"></i> CT Chuyên môn
             </button>
+            <button onclick="showTab('ct-chu-nhiem')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-ct-chu-nhiem">
+                <i data-lucide="users" class="mr-3 w-5"></i> CT Chủ nhiệm
+            </button>
+            <div class="px-6 py-2 text-xs font-semibold text-indigo-400 uppercase tracking-wider mt-4">Khác</div>
             <button onclick="showTab('hanh-chinh')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-hanh-chinh">
                 <i data-lucide="file-text" class="mr-3 w-5"></i> Hành chính
             </button>
@@ -34,45 +39,49 @@
             </button>
         </nav>
         <div id="sync-status" class="p-4 bg-indigo-950 text-[10px] text-indigo-400 flex items-center">
-            <i data-lucide="cloud-check" class="w-3 mr-2"></i> Hệ thống sẵn sàng
+            <i data-lucide="cloud" class="w-3 mr-2"></i> Hệ thống sẵn sàng
         </div>
     </aside>
 
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
-            <h2 id="tab-title" class="text-xl font-semibold text-gray-800">Bảng điều khiển</h2>
-            <button id="main-save-btn" onclick="handleSmartSave()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm flex items-center shadow-md transition-all">
+            <h2 id="tab-title" class="text-xl font-semibold text-gray-800">Lịch công tác tuần</h2>
+            <button onclick="handleSmartSave()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm flex items-center shadow-md transition-all">
                 <i data-lucide="save" class="w-4 mr-2"></i> Lưu dữ liệu
             </button>
         </header>
 
         <main class="flex-1 overflow-y-auto p-8">
-            <div id="dashboard" class="tab-content active text-center py-20">
-                <i data-lucide="sparkles" class="w-16 h-16 mx-auto text-indigo-200 mb-4"></i>
-                <h3 class="text-2xl font-bold text-gray-700">Chào buổi làm việc, Giáo viên!</h3>
-                <p class="text-gray-500 mt-2">Chọn các thư mục bên trái để bắt đầu quản lý chuyên môn và hồ sơ Đảng.</p>
+            
+            <div id="dashboard" class="tab-content active">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <h3 class="font-bold text-gray-800 mb-4">Kế hoạch làm việc tuần này</h3>
+                    <textarea id="lich-cong-tac" class="w-full h-96 p-4 border rounded-lg text-sm bg-blue-50 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Thứ 2: Chào cờ... Thứ 3: Dự giờ..."></textarea>
+                </div>
             </div>
 
-            <div id="chuyen-mon" class="tab-content">
+            <div id="ct-chuyen-mon" class="tab-content">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="brain" class="mr-2 text-purple-600"></i> Giáo án & Học liệu số</h3>
-                    <textarea id="giao-an-content" class="w-full h-80 p-4 border rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Viết nội dung bài giảng hoặc kế hoạch dạy học tại đây..."></textarea>
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="brain" class="mr-2 text-purple-600"></i> Nội dung giảng dạy & Học liệu</h3>
+                    <textarea id="ct-chuyen-mon-content" class="w-full h-80 p-4 border rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Soạn giáo án, đề thi, kế hoạch bộ môn..."></textarea>
+                </div>
+            </div>
+
+            <div id="ct-chu-nhiem" class="tab-content">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="users" class="mr-2 text-green-600"></i> Quản lý lớp & Học sinh</h3>
+                    <textarea id="ct-chu-nhiem-content" class="w-full h-80 p-4 border rounded-lg text-sm bg-green-50 focus:ring-2 focus:ring-green-500 outline-none" placeholder="Theo dõi nề nếp, họp phụ huynh, ghi chú từng học sinh..."></textarea>
                 </div>
             </div>
 
             <div id="dang-phi" class="tab-content">
                 <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-red-600">
                     <h3 class="text-lg font-bold text-red-700 mb-4 flex items-center"><i data-lucide="award" class="mr-2"></i> Hồ sơ Đảng viên</h3>
-                    <div class="space-y-4">
-                        <label class="block text-sm font-medium text-gray-700">Nội dung Bản cam kết tu dưỡng, rèn luyện 2026:</label>
-                        <textarea id="dang-cam-ket" class="w-full h-64 p-4 border rounded-lg text-sm bg-red-50 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nhập nội dung bài viết thu hoạch hoặc cam kết..."></textarea>
-                    </div>
+                    <textarea id="dang-cam-ket" class="w-full h-64 p-4 border rounded-lg text-sm bg-red-50 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nội dung bản cam kết, nghị quyết..."></textarea>
                 </div>
             </div>
 
-            <div id="hanh-chinh" class="tab-content text-center py-20 text-gray-400">
-                Chức năng quản lý điểm số theo Thông tư 22 đang được thiết lập...
-            </div>
+            <div id="hanh-chinh" class="tab-content py-20 text-center text-gray-400">Chức năng đang cập nhật...</div>
         </main>
     </div>
 
@@ -93,72 +102,64 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // --- CÁC HÀM LƯU THEO COLLECTION ---
-
         window.handleSmartSave = async () => {
             const currentTab = document.querySelector('.tab-content.active').id;
             const status = document.getElementById('sync-status');
-            status.innerHTML = '<i data-lucide="refresh-cw" class="w-3 mr-2 animate-spin"></i> Đang tải...';
+            status.innerHTML = '<i data-lucide="refresh-cw" class="w-3 mr-2 animate-spin"></i> Đang lưu...';
             lucide.createIcons();
 
             try {
-                if (currentTab === 'chuyen-mon') {
-                    const content = document.getElementById('giao-an-content').value;
+                if (currentTab === 'dashboard') {
+                    await setDoc(doc(db, "lich_cong_tac", "tuan_hien_tai"), {
+                        noi_dung: document.getElementById('lich-cong-tac').value,
+                        cap_nhat: new Date().toLocaleString('vi-VN')
+                    });
+                } else if (currentTab === 'ct-chuyen-mon') {
                     await setDoc(doc(db, "chuyen_mon", "giao_an_hien_tai"), {
-                        noi_dung: content,
-                        ngay_cap_nhat: new Date().toLocaleString('vi-VN')
+                        noi_dung: document.getElementById('ct-chuyen-mon-content').value,
+                        cap_nhat: new Date().toLocaleString('vi-VN')
                     });
-                    showToast("Đã lưu vào Chuyên môn!");
-                } 
-                else if (currentTab === 'dang-phi') {
-                    const camKet = document.getElementById('dang-cam-ket').value;
+                } else if (currentTab === 'ct-chu-nhiem') {
+                    await setDoc(doc(db, "chu_nhiem", "lop_hien_tai"), {
+                        noi_dung: document.getElementById('ct-chu-nhiem-content').value,
+                        cap_nhat: new Date().toLocaleString('vi-VN')
+                    });
+                } else if (currentTab === 'dang-phi') {
                     await setDoc(doc(db, "cong_tac_dang", "ho_so_2026"), {
-                        noi_dung_cam_ket: camKet,
-                        ngay_ky: new Date().toLocaleString('vi-VN')
+                        noi_dung: document.getElementById('dang-cam-ket').value,
+                        cap_nhat: new Date().toLocaleString('vi-VN')
                     });
-                    showToast("Đã lưu vào Hồ sơ Đảng!");
                 }
-                else {
-                    showToast("Không có dữ liệu để lưu ở tab này.");
-                }
+                status.innerHTML = '<i data-lucide="check-circle" class="w-3 mr-2 text-green-400"></i> Đã lưu thành công!';
             } catch (e) {
-                alert("Lỗi: " + e.message);
-                status.innerHTML = '<i data-lucide="cloud-off" class="w-3 mr-2 text-red-400"></i> Lỗi kết nối';
-                lucide.createIcons();
+                status.innerHTML = '<i data-lucide="alert-circle" class="w-3 mr-2 text-red-400"></i> Lỗi lưu trữ';
             }
+            lucide.createIcons();
         };
 
         window.loadData = async () => {
-            // Tải dữ liệu chuyên môn
-            const docCM = await getDoc(doc(db, "chuyen_mon", "giao_an_hien_tai"));
-            if (docCM.exists()) document.getElementById('giao-an-content').value = docCM.data().noi_dung;
-
-            // Tải dữ liệu Đảng
-            const docDang = await getDoc(doc(db, "cong_tac_dang", "ho_so_2026"));
-            if (docDang.exists()) document.getElementById('dang-cam-ket').value = docDang.data().noi_dung_cam_ket;
+            const ids = [
+                {col: "lich_cong_tac", docId: "tuan_hien_tai", el: "lich-cong-tac"},
+                {col: "chuyen_mon", docId: "giao_an_hien_tai", el: "ct-chuyen-mon-content"},
+                {col: "chu_nhiem", docId: "lop_hien_tai", el: "ct-chu-nhiem-content"},
+                {col: "cong_tac_dang", docId: "ho_so_2026", el: "dang-cam-ket"}
+            ];
+            for (let item of ids) {
+                const snap = await getDoc(doc(db, item.col, item.docId));
+                if (snap.exists()) document.getElementById(item.el).value = snap.data().noi_dung || snap.data().noi_dung_cam_ket || '';
+            }
         };
 
-        function showToast(msg) {
-            const status = document.getElementById('sync-status');
-            status.innerHTML = `<i data-lucide="check-circle" class="w-3 mr-2 text-green-400"></i> ${msg}`;
-            lucide.createIcons();
-        }
-
-        window.onload = () => {
-            lucide.createIcons();
-            loadData();
-        };
+        window.onload = () => { lucide.createIcons(); loadData(); };
     </script>
 
     <script>
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('bg-indigo-800', 'border-yellow-400'));
             document.getElementById('btn-' + tabId).classList.add('bg-indigo-800', 'border-yellow-400');
-            
-            const titles = {'dashboard': 'Bảng điều khiển', 'chuyen-mon': 'Chuyên môn', 'hanh-chinh': 'Hành chính', 'dang-phi': 'Công tác Đảng'};
+            const titles = {'dashboard': 'Lịch công tác tuần', 'ct-chuyen-mon': 'Công tác Chuyên môn', 'ct-chu-nhiem': 'Công tác Chủ nhiệm', 'hanh-chinh': 'Hành chính', 'dang-phi': 'Công tác Đảng'};
             document.getElementById('tab-title').innerText = titles[tabId];
         }
     </script>
