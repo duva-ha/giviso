@@ -1,427 +1,176 @@
-import React, { useState, useEffect } from 'react';
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartTeacher - Trợ lý Giáo viên THPT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50 flex h-screen overflow-hidden">
 
-// Dữ liệu mẫu cho ứng dụng
-const DATA = {
-  theories: [
-    {
-      id: 1,
-      title: "Hệ Mặt Trời",
-      content: "Hệ Mặt Trời bao gồm Mặt Trời và các thiên thể quay quanh nó, bao gồm 8 hành tinh: Thủy tinh, Kim tinh, Trái Đất, Hỏa tinh, Mộc tinh, Thổ tinh, Thiên Vương tinh và Hải Vương tinh.",
-      icon: "☀️"
-    },
-    {
-      id: 2,
-      title: "Quang hợp là gì?",
-      content: "Quang hợp là quá trình thực vật sử dụng năng lượng ánh sáng mặt trời để tổng hợp chất hữu cơ từ khí cacbonic và nước, đồng thời giải phóng khí oxy.",
-      icon: "🌱"
-    },
-    {
-      id: 3,
-      title: "Nước và sự sống",
-      content: "Nước chiếm khoảng 70% bề mặt Trái Đất và khoảng 60-70% trọng lượng cơ thể con người. Nước là dung môi hòa tan nhiều chất dinh dưỡng cần thiết cho cơ thể.",
-      icon: "💧"
-    }
-  ],
-  quiz: [
-    {
-      id: 1,
-      question: "Hành tinh nào gần Mặt Trời nhất?",
-      options: ["Trái Đất", "Thủy Tinh", "Hỏa Tinh", "Kim Tinh"],
-      correct: 1 // Index of correct answer
-    },
-    {
-      id: 2,
-      question: "Động vật nào sau đây là loài lưỡng cư?",
-      options: ["Cá sấu", "Ếch", "Rắn", "Thằn lằn"],
-      correct: 1
-    },
-    {
-      id: 3,
-      question: "Công thức hóa học của nước là gì?",
-      options: ["HO", "H2O", "O2H", "CO2"],
-      correct: 1
-    },
-    {
-      id: 4,
-      question: "Việt Nam nằm ở châu lục nào?",
-      options: ["Châu Âu", "Châu Mỹ", "Châu Á", "Châu Phi"],
-      correct: 2
-    }
-  ],
-  explore: [
-    {
-      title: "Bạn có biết?",
-      text: "Mật ong là loại thực phẩm duy nhất không bao giờ bị hỏng. Người ta đã tìm thấy mật ong trong các ngôi mộ Ai Cập cổ đại vẫn còn ăn được!",
-      color: "bg-orange-100 border-orange-300 text-orange-800"
-    },
-    {
-      title: "Kỷ lục thế giới",
-      text: "Loài động vật lớn nhất hành tinh là Cá voi xanh. Trái tim của nó lớn đến mức một con người có thể bơi trong các động mạch!",
-      color: "bg-blue-100 border-blue-300 text-blue-800"
-    },
-    {
-      title: "Vũ trụ bao la",
-      text: "Một ngày trên sao Kim dài hơn một năm trên sao Kim. Nó quay quanh trục của mình chậm hơn quay quanh Mặt Trời.",
-      color: "bg-purple-100 border-purple-300 text-purple-800"
-    }
-  ]
-};
-
-// Component: SVG Icons để không phụ thuộc thư viện ngoài
-const Icons = {
-  Book: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-blue-500">
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-    </svg>
-  ),
-  Check: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-green-500">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-      <polyline points="22 4 12 14.01 9 11.01"></polyline>
-    </svg>
-  ),
-  Compass: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-purple-500">
-      <circle cx="12" cy="12" r="10"></circle>
-      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
-    </svg>
-  ),
-  Back: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12"></line>
-      <polyline points="12 19 5 12 12 5"></polyline>
-    </svg>
-  ),
-  User: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  ),
-  LogOut: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-      <polyline points="16 17 21 12 16 7"></polyline>
-      <line x1="21" y1="12" x2="9" y2="12"></line>
-    </svg>
-  )
-};
-
-export default function App() {
-  const [user, setUser] = useState(null);
-  const [currentView, setCurrentView] = useState('login'); // login, dashboard, theory, quiz, explore
-  const [formData, setFormData] = useState({ name: '', classRoom: '' });
-
-  // Login handler
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (formData.name && formData.classRoom) {
-      setUser(formData);
-      setCurrentView('dashboard');
-    }
-  };
-
-  // Render Login Screen
-  if (currentView === 'login') {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center p-4 font-sans">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md transform transition-all hover:scale-105 duration-300">
-          <div className="text-center mb-8">
-            <div className="bg-blue-100 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-4">
-              <span className="text-4xl">🎓</span>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800">Góc Học Tập</h1>
-            <p className="text-gray-500 mt-2">Vui lòng nhập thông tin để bắt đầu</p>
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Họ và Tên</label>
-              <input
-                type="text"
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                placeholder="Ví dụ: Nguyễn Văn A"
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Lớp Học</label>
-              <input
-                type="text"
-                required
-                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                placeholder="Ví dụ: 5A"
-                value={formData.classRoom}
-                onChange={(e) => setFormData({...formData, classRoom: e.target.value})}
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl transform active:scale-95"
-            >
-              Vào Học Ngay
+    <aside class="w-64 bg-indigo-900 text-white flex flex-col shadow-xl">
+        <div class="p-6 text-2xl font-bold border-b border-indigo-800 flex items-center">
+            <i data-lucide="cpu" class="mr-2 text-yellow-400"></i> SmartTeacher
+        </div>
+        <nav class="flex-1 mt-6">
+            <button onclick="showTab('dashboard')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent active-nav" id="btn-dashboard">
+                <i data-lucide="layout-dashboard" class="mr-3 w-5"></i> Bảng điều khiển
             </button>
-          </form>
-        </div>
-      </div>
-    );
-  }
-
-  // Header Component (used in all internal pages)
-  const Header = () => (
-    <div className="bg-white shadow-sm sticky top-0 z-10">
-      <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          {currentView !== 'dashboard' && (
-            <button 
-              onClick={() => setCurrentView('dashboard')}
-              className="p-2 hover:bg-gray-100 rounded-full mr-2 transition-colors"
-            >
-              <Icons.Back />
+            <button onclick="showTab('chuyen-mon')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-chuyen-mon">
+                <i data-lucide="book-open" class="mr-3 w-5"></i> Chuyên môn
             </button>
-          )}
-          <div className="flex flex-col">
-            <span className="font-bold text-gray-800 text-lg flex items-center gap-2">
-               Xin chào, {user.name}
-            </span>
-            <span className="text-xs text-gray-500 font-medium bg-blue-100 px-2 py-0.5 rounded-full w-fit">
-              Lớp {user.classRoom}
-            </span>
-          </div>
+            <button onclick="showTab('hanh-chinh')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-hanh-chinh">
+                <i data-lucide="file-text" class="mr-3 w-5"></i> Hành chính
+            </button>
+            <button onclick="showTab('dang-phi')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-dang-phi">
+                <i data-lucide="shield-check" class="mr-3 w-5"></i> Công tác Đảng
+            </button>
+        </nav>
+        <div class="p-4 bg-indigo-950 text-xs text-indigo-300">
+            Hệ thống hỗ trợ GDPT 2018 & TT 22
         </div>
-        <button 
-          onClick={() => {
-            setUser(null);
-            setCurrentView('login');
-            setFormData({ name: '', classRoom: '' });
-          }}
-          className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
-        >
-          <Icons.LogOut />
-          <span className="hidden sm:inline">Thoát</span>
-        </button>
-      </div>
-    </div>
-  );
+    </aside>
 
-  // Render Dashboard
-  if (currentView === 'dashboard') {
-    return (
-      <div className="min-h-screen bg-gray-50 font-sans">
-        <Header />
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Hôm nay bạn muốn làm gì?</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Card 1: Lý thuyết */}
-            <div 
-              onClick={() => setCurrentView('theory')}
-              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-2 border-b-4 border-blue-500 group"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="p-4 bg-blue-50 rounded-full mb-4 group-hover:bg-blue-100 transition-colors">
-                  <Icons.Book />
+    <div class="flex-1 flex flex-col">
+        <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
+            <h2 id="tab-title" class="text-xl font-semibold text-gray-800">Bảng điều khiển</h2>
+            <div class="flex items-center space-x-4">
+                <div class="text-right">
+                    <p class="text-sm font-medium text-gray-700">GV. Nguyễn Văn A</p>
+                    <p class="text-xs text-gray-500">Trường THPT Chuyên</p>
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Lý Thuyết</h3>
-                <p className="text-gray-500 text-sm">Ôn tập kiến thức và bài học mới.</p>
-              </div>
+                <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">A</div>
             </div>
+        </header>
 
-            {/* Card 2: Kiểm tra */}
-            <div 
-              onClick={() => setCurrentView('quiz')}
-              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-2 border-b-4 border-green-500 group"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="p-4 bg-green-50 rounded-full mb-4 group-hover:bg-green-100 transition-colors">
-                   <Icons.Check />
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Kiểm Tra</h3>
-                <p className="text-gray-500 text-sm">Thử sức với các bài trắc nghiệm vui.</p>
-              </div>
-            </div>
-
-            {/* Card 3: Khám phá */}
-            <div 
-              onClick={() => setCurrentView('explore')}
-              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-2 border-b-4 border-purple-500 group"
-            >
-              <div className="flex flex-col items-center text-center">
-                <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100 transition-colors">
-                  <Icons.Compass />
-                </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-2">Khám Phá</h3>
-                <p className="text-gray-500 text-sm">Tìm hiểu những điều thú vị quanh ta.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render Theory View
-  if (currentView === 'theory') {
-    return (
-      <div className="min-h-screen bg-gray-50 font-sans">
-        <Header />
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <span className="text-3xl">📚</span> Góc Lý Thuyết
-          </h2>
-          <div className="space-y-4">
-            {DATA.theories.map((theory) => (
-              <div key={theory.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="flex items-start gap-4">
-                  <div className="text-4xl p-2 bg-gray-50 rounded-xl">{theory.icon}</div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800 mb-2">{theory.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">{theory.content}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render Quiz View
-  if (currentView === 'quiz') {
-    const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [score, setScore] = useState(0);
-    const [showResult, setShowResult] = useState(false);
-    const [selectedOption, setSelectedOption] = useState(null);
-
-    const handleAnswer = (optionIndex) => {
-      setSelectedOption(optionIndex);
-      
-      // Delay to show selection effect before moving next
-      setTimeout(() => {
-        if (optionIndex === DATA.quiz[currentQuestion].correct) {
-          setScore(score + 1);
-        }
-        
-        if (currentQuestion + 1 < DATA.quiz.length) {
-          setCurrentQuestion(currentQuestion + 1);
-          setSelectedOption(null);
-        } else {
-          setShowResult(true);
-        }
-      }, 500);
-    };
-
-    const resetQuiz = () => {
-      setCurrentQuestion(0);
-      setScore(0);
-      setShowResult(false);
-      setSelectedOption(null);
-    };
-
-    return (
-      <div className="min-h-screen bg-gray-50 font-sans">
-        <Header />
-        <div className="max-w-2xl mx-auto px-4 py-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <span className="text-3xl">✍️</span> Bài Kiểm Tra Nhanh
-          </h2>
-
-          {!showResult ? (
-            <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
-              <div className="bg-blue-600 px-6 py-4 flex justify-between items-center text-white">
-                <span className="font-bold">Câu hỏi {currentQuestion + 1}/{DATA.quiz.length}</span>
-                <span className="bg-blue-500 px-3 py-1 rounded-full text-sm">Điểm: {score}</span>
-              </div>
-              <div className="p-8">
-                <h3 className="text-xl font-bold text-gray-800 mb-8">{DATA.quiz[currentQuestion].question}</h3>
-                <div className="space-y-3">
-                  {DATA.quiz[currentQuestion].options.map((option, index) => (
-                    <button
-                      key={index}
-                      disabled={selectedOption !== null}
-                      onClick={() => handleAnswer(index)}
-                      className={`w-full text-left p-4 rounded-xl border-2 transition-all font-medium flex justify-between items-center
-                        ${selectedOption === index 
-                          ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                          : 'border-gray-100 hover:border-blue-300 hover:bg-gray-50 text-gray-600'
-                        }`}
-                    >
-                      {option}
-                      {selectedOption === index && <span className="text-blue-500">Selected</span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-3xl shadow-lg p-8 text-center animate-fade-in">
-              <div className="text-6xl mb-4">🏆</div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">Hoàn Thành!</h3>
-              <p className="text-gray-500 mb-6">Bạn đã trả lời đúng <strong className="text-blue-600 text-xl">{score}/{DATA.quiz.length}</strong> câu hỏi.</p>
-              
-              <div className="w-full bg-gray-200 rounded-full h-4 mb-8">
-                <div 
-                  className="bg-blue-600 h-4 rounded-full transition-all duration-1000" 
-                  style={{ width: `${(score / DATA.quiz.length) * 100}%` }}
-                ></div>
-              </div>
-
-              <button
-                onClick={resetQuiz}
-                className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
-              >
-                Làm lại bài
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Render Explore View
-  if (currentView === 'explore') {
-    return (
-      <div className="min-h-screen bg-gray-50 font-sans">
-        <Header />
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <span className="text-3xl">🚀</span> Khám Phá Thế Giới
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {DATA.explore.map((item, index) => (
-              <div key={index} className={`p-6 rounded-2xl border-l-8 shadow-sm hover:shadow-md transition-all ${item.color.replace('text-', 'border-')}`}>
-                <div className="flex items-center mb-3">
-                  <span className="text-2xl mr-3">💡</span>
-                  <h3 className={`font-bold text-lg ${item.color.split(' ')[2]}`}>{item.title}</h3>
-                </div>
-                <p className="text-gray-700 leading-relaxed">
-                  {item.text}
-                </p>
-              </div>
-            ))}
+        <main class="flex-1 overflow-y-auto p-8">
             
-            {/* Interactive Element Placeholder */}
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg flex flex-col justify-center items-center text-center col-span-1 md:col-span-2">
-               <span className="text-4xl mb-4">🌌</span>
-               <h3 className="font-bold text-xl mb-2">Hũ Kiến Thức Bí Ẩn</h3>
-               <p className="opacity-90 mb-4">Bấm vào đây để nhận một kiến thức ngẫu nhiên!</p>
-               <button 
-                onClick={() => alert("🐧 Chim cánh cụt có thể nhảy cao tới 1.8 mét!")}
-                className="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold hover:bg-opacity-90 transition-all"
-               >
-                 Mở ra xem
-               </button>
+            <div id="dashboard" class="tab-content active">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-blue-500">
+                        <p class="text-gray-500 text-sm">Giáo án tuần tới</p>
+                        <h3 class="text-2xl font-bold text-gray-800">05/12</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-yellow-500">
+                        <p class="text-gray-500 text-sm">Học sinh cần lưu ý</p>
+                        <h3 class="text-2xl font-bold text-gray-800">03 em</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-red-500">
+                        <p class="text-gray-500 text-sm">Hạn nộp báo cáo Đảng</p>
+                        <h3 class="text-2xl font-bold text-gray-800">2 ngày</h3>
+                    </div>
+                </div>
+                <h4 class="font-semibold text-gray-700 mb-4">Lối tắt nhanh</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button class="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition text-center border border-gray-100">
+                        <i data-lucide="plus-circle" class="mx-auto mb-2 text-indigo-600"></i> Soạn bài mới
+                    </button>
+                    </div>
             </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  return null;
-}
+            <div id="chuyen-mon" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i data-lucide="brain" class="mr-2 text-purple-600"></i> Trợ lý soạn giảng AI</h3>
+                        <p class="text-sm text-gray-600 mb-4">Tự động tạo giáo án 5512, ma trận đề thi và gợi ý bài giảng sinh động.</p>
+                        <textarea class="w-full p-3 border rounded-lg text-sm bg-gray-50" placeholder="Nhập tên bài học..."></textarea>
+                        <button class="mt-3 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">Tạo giáo án</button>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i data-lucide="library" class="mr-2 text-blue-600"></i> Học liệu số & Pháp quy</h3>
+                        <ul class="text-sm space-y-2">
+                            <li class="flex items-center text-blue-600 hover:underline cursor-pointer"><i data-lucide="external-link" class="w-4 mr-2"></i> Thông tư 22/2021/TT-BGDĐT</li>
+                            <li class="flex items-center text-blue-600 hover:underline cursor-pointer"><i data-lucide="external-link" class="w-4 mr-2"></i> Chương trình GDPT 2018 - Môn Toán</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div id="hanh-chinh" class="tab-content">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="p-4 border-b">Loại sổ sách</th>
+                                <th class="p-4 border-b">Trạng thái</th>
+                                <th class="p-4 border-b">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-sm">
+                            <tr>
+                                <td class="p-4 border-b">Sổ điểm lớp 12A1</td>
+                                <td class="p-4 border-b"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Đã hoàn thành</span></td>
+                                <td class="p-4 border-b text-indigo-600 hover:underline cursor-pointer font-medium">Cập nhật</td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 border-b">Báo cáo chủ nhiệm tháng 01</td>
+                                <td class="p-4 border-b"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">Chưa nộp</span></td>
+                                <td class="p-4 border-b text-indigo-600 hover:underline cursor-pointer font-medium">Soạn ngay</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="dang-phi" class="tab-content">
+                <div class="max-w-3xl mx-auto space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-red-600">
+                        <h3 class="text-lg font-bold text-red-700 mb-4 flex items-center"><i data-lucide="award" class="mr-2"></i> Hồ sơ Đảng viên</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between p-3 bg-red-50 rounded text-sm">
+                                <span>Bản cam kết tu dưỡng rèn luyện 2026</span>
+                                <span class="text-red-600 font-bold italic underline cursor-pointer">Chỉnh sửa</span>
+                            </div>
+                            <div class="flex justify-between p-3 bg-gray-50 rounded text-sm">
+                                <span>Bài thu hoạch Nghị quyết TW 8</span>
+                                <span class="text-green-600 font-bold italic underline cursor-pointer">Đã lưu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Khởi tạo icons
+        lucide.createIcons();
+
+        // Hàm chuyển Tab
+        function showTab(tabId) {
+            // Ẩn tất cả tab
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Hiện tab được chọn
+            document.getElementById(tabId).classList.add('active');
+
+            // Cập nhật Style Sidebar
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('bg-indigo-800', 'border-yellow-400');
+            });
+            document.getElementById('btn-' + tabId).classList.add('bg-indigo-800', 'border-yellow-400');
+
+            // Cập nhật Tiêu đề Header
+            const labels = {
+                'dashboard': 'Bảng điều khiển',
+                'chuyen-mon': 'Chuyên môn',
+                'hanh-chinh': 'Hành chính',
+                'dang-phi': 'Công tác Đảng'
+            };
+            document.getElementById('tab-title').innerText = labels[tabId];
+        }
+
+        // Mặc định tab đầu tiên
+        showTab('dashboard');
+    </script>
+</body>
+</html>
