@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartTeacher - Focus Mode</title>
+    <title>SmartTeacher - Professional Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -12,92 +12,145 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         textarea { resize: none; border: none; outline: none; background: transparent; width: 100%; line-height: 1.6; }
-        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; backdrop-filter: blur(4px); }
+        
+        /* Sidebar Styling */
+        .nav-item { color: #94a3b8; transition: all 0.2s; }
+        .nav-item.active-nav { 
+            background-color: #f59e0b; 
+            color: #0f172a; 
+            box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.3);
+        }
+        .nav-item:hover:not(.active-nav) {
+            color: #f8fafc;
+            background-color: rgba(51, 65, 85, 0.5);
+        }
+
+        /* Modal styling */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); z-index: 50; backdrop-filter: blur(8px); }
         .modal.active { display: flex; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex h-screen overflow-hidden text-slate-900">
 
-    <aside class="w-20 lg:w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10">
-        <div class="p-6 mb-4">
+    <aside class="w-20 lg:w-72 bg-[#0f172a] text-slate-300 flex flex-col shadow-2xl z-10">
+        <div class="p-8 mb-4 border-b border-slate-800/50">
             <div class="flex items-center space-x-3 group cursor-pointer">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <i data-lucide="layout-grid" size="20"></i>
+                <div class="w-10 h-10 bg-amber-500 rounded-xl flex items-center justify-center text-slate-900 shadow-lg group-hover:rotate-6 transition-transform">
+                    <i data-lucide="layout-grid" size="20" class="stroke-[2.5px]"></i>
                 </div>
-                <span class="hidden lg:block font-bold text-xl tracking-tight">SmartTeacher</span>
+                <span class="hidden lg:block font-bold text-xl tracking-tight text-white uppercase">SmartTeacher</span>
             </div>
         </div>
-        <nav class="flex-1 px-4 space-y-2">
-            <button onclick="showTab('dashboard')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600" id="btn-dashboard">
-                <i data-lucide="calendar"></i><span class="hidden lg:block ml-3 font-medium text-sm">Lịch công tác</span>
+        
+        <nav class="flex-1 px-4 space-y-1">
+            <div class="hidden lg:block px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">Cá nhân</div>
+            <button onclick="showTab('dashboard')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl mb-4 active-nav" id="btn-dashboard">
+                <i data-lucide="calendar-days"></i>
+                <span class="hidden lg:block ml-3 font-bold text-sm">Lịch công tác</span>
             </button>
-            <button onclick="showTab('ct-chuyen-mon')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all" id="btn-ct-chuyen-mon">
-                <i data-lucide="book-open"></i><span class="hidden lg:block ml-3 font-medium text-sm">Chuyên môn</span>
+
+            <div class="h-[1px] bg-slate-800 mx-4 my-4"></div>
+
+            <div class="hidden lg:block px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">Giảng dạy</div>
+            <button onclick="showTab('ct-chuyen-mon')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl" id="btn-ct-chuyen-mon">
+                <i data-lucide="book-marked"></i>
+                <span class="hidden lg:block ml-3 font-semibold text-sm">Chuyên môn</span>
             </button>
-            <button onclick="showTab('ct-chu-nhiem')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all" id="btn-ct-chu-nhiem">
-                <i data-lucide="users-2"></i><span class="hidden lg:block ml-3 font-medium text-sm">Chủ nhiệm</span>
+            <button onclick="showTab('ct-chu-nhiem')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl" id="btn-ct-chu-nhiem">
+                <i data-lucide="users"></i>
+                <span class="hidden lg:block ml-3 font-semibold text-sm">Chủ nhiệm</span>
             </button>
-            <button onclick="showTab('dang-phi')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all" id="btn-dang-phi">
-                <i data-lucide="shield-check"></i><span class="hidden lg:block ml-3 font-medium text-sm">Hồ sơ Đảng</span>
+
+            <div class="h-[1px] bg-slate-800 mx-4 my-4"></div>
+
+            <div class="hidden lg:block px-4 py-2 text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-1">Hệ thống</div>
+            <button onclick="showTab('dang-phi')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl" id="btn-dang-phi">
+                <i data-lucide="shield-check"></i>
+                <span class="hidden lg:block ml-3 font-semibold text-sm">Hồ sơ Đảng</span>
             </button>
         </nav>
+
+        <div class="p-6 mt-auto">
+            <div id="sync-status" class="bg-slate-900 rounded-xl p-3 flex items-center space-x-3 text-[10px] font-bold text-slate-500 border border-slate-800">
+                <div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div>
+                <span class="uppercase tracking-widest">Hệ thống sẵn sàng</span>
+            </div>
+        </div>
     </aside>
 
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="h-20 bg-white/80 backdrop-blur-md flex items-center justify-between px-10 border-b border-slate-100">
-            <div class="flex items-center space-x-4 flex-1">
+            <div class="flex items-center space-x-6 flex-1">
                 <h2 id="tab-title" class="text-xl font-bold text-slate-800">Lịch công tác</h2>
-                <div class="relative w-64 hidden md:block">
+                <div class="relative w-80 hidden md:block">
                     <i data-lucide="search" class="absolute left-3 top-2.5 text-slate-400 w-4 h-4"></i>
-                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="Tìm nội dung..." class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-lg text-sm w-full focus:ring-2 focus:ring-indigo-200 outline-none">
+                    <input type="text" id="search-input" placeholder="Tìm nội dung công việc..." class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm w-full focus:ring-2 focus:ring-amber-200 outline-none transition-all">
                 </div>
             </div>
-            <div class="flex items-center space-x-3">
-                <div id="sync-status" class="text-[10px] text-slate-400 mr-4 font-bold">READY</div>
-                <button onclick="handleSmartSave()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center shadow-lg transition-all active:scale-95">
-                    <i data-lucide="save" class="w-4 mr-2"></i> Lưu dữ liệu
-                </button>
-            </div>
+            <button onclick="handleSmartSave()" class="bg-[#0f172a] hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-bold flex items-center shadow-xl transition-all active:scale-95">
+                <i data-lucide="save" class="w-4 mr-2"></i> Lưu dữ liệu
+            </button>
         </header>
 
         <main class="flex-1 overflow-y-auto p-10">
             <div id="dashboard" class="tab-content active">
                 <div class="max-w-2xl mx-auto">
-                    <div class="flex items-center justify-between mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                    <div class="flex items-center justify-between mb-8 bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
                         <div class="flex items-center space-x-4">
-                            <button onclick="changeDay(-1)" class="p-2 hover:bg-slate-100 rounded-full transition-colors"><i data-lucide="chevron-left"></i></button>
-                            <div class="text-center min-w-[150px]">
-                                <h3 id="display-day-label" class="text-lg font-bold text-indigo-600 uppercase tracking-tighter">Thứ Hai</h3>
-                                <p id="display-date" class="text-sm text-slate-400 font-medium tracking-widest">12/01/2026</p>
+                            <button onclick="changeDay(-1)" class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-amber-600"><i data-lucide="chevron-left"></i></button>
+                            <div class="text-center min-w-[180px]">
+                                <h3 id="display-day-label" class="text-xl font-bold text-slate-800 uppercase tracking-tighter"></h3>
+                                <p id="display-date" class="text-sm text-amber-600 font-bold tracking-widest"></p>
                             </div>
-                            <button onclick="changeDay(1)" class="p-2 hover:bg-slate-100 rounded-full transition-colors"><i data-lucide="chevron-right"></i></button>
+                            <button onclick="changeDay(1)" class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-amber-600"><i data-lucide="chevron-right"></i></button>
                         </div>
-                        <button onclick="toggleWeeklyModal(true)" class="flex items-center space-x-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all">
+                        <button onclick="toggleWeeklyModal(true)" class="flex items-center space-x-2 px-4 py-2 bg-amber-50 text-amber-700 rounded-xl text-xs font-bold hover:bg-amber-100 transition-all">
                             <i data-lucide="calendar-days" size="14"></i>
                             <span>XEM CẢ TUẦN</span>
                         </button>
                     </div>
 
-                    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden min-h-[400px]">
-                        <div class="h-2 bg-indigo-600 w-full"></div>
-                        <textarea id="daily-content" oninput="updateBuffer()" class="p-10 h-[400px] text-slate-700 text-lg" placeholder="Hôm nay bạn có kế hoạch gì..."></textarea>
+                    <div class="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 border border-slate-100 overflow-hidden min-h-[450px]">
+                        <div class="h-2 bg-amber-500 w-full"></div>
+                        <textarea id="daily-content" oninput="updateBuffer()" class="p-10 h-[450px] text-slate-700 text-lg font-medium leading-relaxed" placeholder="Ghi chú nội dung công tác hôm nay..."></textarea>
                     </div>
                 </div>
             </div>
 
-            <div id="ct-chuyen-mon" class="tab-content"><div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm"><h3 class="font-bold mb-4">Chuyên môn</h3><textarea id="ct-chuyen-mon-content" class="h-[500px] bg-slate-50 p-6 rounded-2xl"></textarea></div></div>
-            <div id="ct-chu-nhiem" class="tab-content"><div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm"><h3 class="font-bold mb-4">Chủ nhiệm</h3><textarea id="ct-chu-nhiem-content" class="h-[500px] bg-slate-50 p-6 rounded-2xl"></textarea></div></div>
-            <div id="dang-phi" class="tab-content"><div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm"><h3 class="font-bold mb-4">Hồ sơ Đảng</h3><textarea id="dang-cam-ket" class="h-[400px] bg-red-50/30 p-6 rounded-2xl"></textarea></div></div>
+            <div id="ct-chuyen-mon" class="tab-content">
+                <div class="max-w-4xl mx-auto bg-white p-10 rounded-3xl shadow-sm border border-slate-100">
+                    <h3 class="text-xl font-bold mb-6 text-slate-800">Công tác Chuyên môn</h3>
+                    <textarea id="ct-chuyen-mon-content" class="h-[600px] bg-slate-50 p-8 rounded-2xl border-none focus:ring-2 focus:ring-amber-100" placeholder="Soạn giảng, kế hoạch giảng dạy..."></textarea>
+                </div>
+            </div>
+
+            <div id="ct-chu-nhiem" class="tab-content">
+                <div class="max-w-4xl mx-auto bg-white p-10 rounded-3xl shadow-sm border border-slate-100">
+                    <h3 class="text-xl font-bold mb-6 text-slate-800">Công tác Chủ nhiệm</h3>
+                    <textarea id="ct-chu-nhiem-content" class="h-[600px] bg-slate-50 p-8 rounded-2xl border-none focus:ring-2 focus:ring-amber-100" placeholder="Quản lý nề nếp, học tập của lớp..."></textarea>
+                </div>
+            </div>
+
+            <div id="dang-phi" class="tab-content">
+                <div class="max-w-4xl mx-auto bg-white p-10 rounded-3xl shadow-sm border-t-4 border-amber-600 border-x border-b">
+                    <h3 class="text-xl font-bold mb-6 text-slate-800">Hồ sơ Đảng viên</h3>
+                    <textarea id="dang-cam-ket" class="h-[400px] bg-amber-50/30 p-8 rounded-2xl border-none focus:ring-2 focus:ring-amber-100" placeholder="Bản cam kết tu dưỡng, nghị quyết chi bộ..."></textarea>
+                </div>
+            </div>
         </main>
     </div>
 
-    <div id="weekly-modal" class="modal items-center justify-center p-6">
-        <div class="bg-white w-full max-w-6xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
-                <h3 class="font-bold text-xl">Lịch công tác tuần</h3>
-                <button onclick="toggleWeeklyModal(false)" class="p-2 hover:bg-slate-200 rounded-full"><i data-lucide="x"></i></button>
+    <div id="weekly-modal" class="modal items-center justify-center p-8">
+        <div class="bg-white w-full max-w-7xl rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-8 border-b flex justify-between items-center bg-slate-50/50">
+                <h3 class="font-bold text-2xl text-slate-800">Tổng quan kế hoạch tuần</h3>
+                <button onclick="toggleWeeklyModal(false)" class="p-2 hover:bg-slate-200 rounded-full transition-colors"><i data-lucide="x"></i></button>
             </div>
-            <div class="p-6 grid grid-cols-1 md:grid-cols-7 gap-4 overflow-y-auto" id="weekly-grid">
+            <div class="p-8 grid grid-cols-1 md:grid-cols-7 gap-4 overflow-y-auto bg-slate-50/30" id="weekly-grid">
                 </div>
         </div>
     </div>
@@ -121,8 +174,8 @@
         let currentViewDate = new Date();
         let weekData = { t2: '', t3: '', t4: '', t5: '', t6: '', t7: '', cn: '' };
 
-        // Xử lý ngày tháng
-        function updateUI() {
+        // Hàm cập nhật giao diện ngày
+        function updateDateUI() {
             const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
             const ids = ["cn", "t2", "t3", "t4", "t5", "t6", "t7"];
             
@@ -135,7 +188,7 @@
 
         window.changeDay = (val) => {
             currentViewDate.setDate(currentViewDate.getDate() + val);
-            updateUI();
+            updateDateUI();
         };
 
         window.updateBuffer = () => {
@@ -160,33 +213,27 @@
             
             ids.forEach((id, i) => {
                 grid.innerHTML += `
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                        <p class="text-[10px] font-bold text-indigo-600 mb-2 uppercase">${labels[i]}</p>
-                        <div class="text-sm text-slate-600 whitespace-pre-wrap h-40 overflow-y-auto">${weekData[id] || '...'}</div>
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                        <p class="text-[10px] font-bold text-amber-600 mb-3 uppercase tracking-widest">${labels[i]}</p>
+                        <div class="text-xs text-slate-500 whitespace-pre-wrap h-48 overflow-y-auto leading-relaxed">${weekData[id] || 'Chưa có ghi chú...'}</div>
                     </div>
                 `;
             });
         }
 
-        window.handleSearch = () => {
-            const term = document.getElementById('search-input').value.toLowerCase();
-            if(!term) return;
-            // logic tìm kiếm đơn giản: báo kết quả ở console hoặc highlight
-            console.log("Searching for:", term);
-        };
-
         window.handleSmartSave = async () => {
-            document.getElementById('sync-status').innerText = 'SAVING...';
+            const status = document.getElementById('sync-status');
+            status.innerHTML = '<div class="w-2 h-2 rounded-full bg-blue-500 animate-spin"></div><span>ĐANG LƯU...</span>';
             try {
-                const fullPayload = {
+                const payload = {
                     lich: weekData,
                     chuyenMon: document.getElementById('ct-chuyen-mon-content').value,
                     chuNhiem: document.getElementById('ct-chu-nhiem-content').value,
                     dang: document.getElementById('dang-cam-ket').value
                 };
-                await setDoc(doc(db, "teacher_data", "current_work"), fullPayload);
-                document.getElementById('sync-status').innerText = 'ALL SAVED';
-            } catch (e) { document.getElementById('sync-status').innerText = 'ERROR'; }
+                await setDoc(doc(db, "teacher_data", "current_work"), payload);
+                status.innerHTML = '<div class="w-2 h-2 rounded-full bg-amber-500"></div><span>ĐÃ ĐỒNG BỘ</span>';
+            } catch (e) { status.innerHTML = 'LỖI KẾT NỐI'; }
         };
 
         window.loadData = async () => {
@@ -197,7 +244,7 @@
                 document.getElementById('ct-chuyen-mon-content').value = d.chuyenMon || '';
                 document.getElementById('ct-chu-nhiem-content').value = d.chuNhiem || '';
                 document.getElementById('dang-cam-ket').value = d.dang || '';
-                updateUI();
+                updateDateUI();
             }
         };
 
@@ -208,8 +255,13 @@
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('bg-indigo-50', 'text-indigo-600', 'border-r-4', 'border-indigo-600'));
-            document.getElementById('btn-' + tabId).classList.add('bg-indigo-50', 'text-indigo-600', 'border-r-4', 'border-indigo-600');
+            document.querySelectorAll('.nav-item').forEach(b => {
+                b.classList.remove('active-nav');
+            });
+            document.getElementById('btn-' + tabId).classList.add('active-nav');
+            
+            const titles = {'dashboard': 'Lịch công tác', 'ct-chuyen-mon': 'Công tác Chuyên môn', 'ct-chu-nhiem': 'Công tác Chủ nhiệm', 'dang-phi': 'Hồ sơ Đảng viên'};
+            document.getElementById('tab-title').innerText = titles[tabId];
         }
     </script>
 </body>
