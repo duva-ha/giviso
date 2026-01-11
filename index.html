@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartTeacher - Modern Minimalist</title>
+    <title>SmartTeacher - Focus Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.01em; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .calendar-card textarea { resize: none; border: none; width: 100%; height: 280px; background: transparent; outline: none; font-size: 0.875 nội dung; color: #475569; line-height: 1.6; }
-        .calendar-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #e2e8f0; }
-        .calendar-card:focus-within { transform: translateY(-4px); border-color: #6366f1; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.1); background-color: white; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        textarea { resize: none; border: none; outline: none; background: transparent; width: 100%; line-height: 1.6; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 50; backdrop-filter: blur(4px); }
+        .modal.active { display: flex; }
     </style>
 </head>
 <body class="bg-[#f8fafc] flex h-screen overflow-hidden text-slate-900">
@@ -23,90 +21,85 @@
     <aside class="w-20 lg:w-64 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10">
         <div class="p-6 mb-4">
             <div class="flex items-center space-x-3 group cursor-pointer">
-                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-indigo-200 shadow-lg group-hover:rotate-6 transition-transform">
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
                     <i data-lucide="layout-grid" size="20"></i>
                 </div>
                 <span class="hidden lg:block font-bold text-xl tracking-tight">SmartTeacher</span>
             </div>
         </div>
-        
         <nav class="flex-1 px-4 space-y-2">
-            <button onclick="showTab('dashboard')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all group active-nav" id="btn-dashboard">
-                <i data-lucide="calendar-days" class="group-hover:text-indigo-600"></i>
-                <span class="hidden lg:block ml-3 font-medium text-sm">Lịch công tác</span>
+            <button onclick="showTab('dashboard')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl bg-indigo-50 text-indigo-600 border-r-4 border-indigo-600" id="btn-dashboard">
+                <i data-lucide="calendar"></i><span class="hidden lg:block ml-3 font-medium text-sm">Lịch công tác</span>
             </button>
-            <button onclick="showTab('ct-chuyen-mon')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all group" id="btn-ct-chuyen-mon">
-                <i data-lucide="book-open" class="group-hover:text-indigo-600"></i>
-                <span class="hidden lg:block ml-3 font-medium text-sm">Chuyên môn</span>
+            <button onclick="showTab('ct-chuyen-mon')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all" id="btn-ct-chuyen-mon">
+                <i data-lucide="book-open"></i><span class="hidden lg:block ml-3 font-medium text-sm">Chuyên môn</span>
             </button>
-            <button onclick="showTab('ct-chu-nhiem')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all group" id="btn-ct-chu-nhiem">
-                <i data-lucide="users-2" class="group-hover:text-indigo-600"></i>
-                <span class="hidden lg:block ml-3 font-medium text-sm">Chủ nhiệm</span>
+            <button onclick="showTab('ct-chu-nhiem')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all" id="btn-ct-chu-nhiem">
+                <i data-lucide="users-2"></i><span class="hidden lg:block ml-3 font-medium text-sm">Chủ nhiệm</span>
             </button>
-            <button onclick="showTab('dang-phi')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all group" id="btn-dang-phi">
-                <i data-lucide="shield-check" class="group-hover:text-indigo-600"></i>
-                <span class="hidden lg:block ml-3 font-medium text-sm">Hồ sơ Đảng</span>
+            <button onclick="showTab('dang-phi')" class="nav-item w-full flex items-center px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all" id="btn-dang-phi">
+                <i data-lucide="shield-check"></i><span class="hidden lg:block ml-3 font-medium text-sm">Hồ sơ Đảng</span>
             </button>
         </nav>
-
-        <div class="p-4 mt-auto">
-            <div id="sync-status" class="bg-slate-50 rounded-lg p-3 flex items-center space-x-2 text-[10px] font-semibold text-slate-400">
-                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span>SYSTEM READY</span>
-            </div>
-        </div>
     </aside>
 
     <div class="flex-1 flex flex-col overflow-hidden">
         <header class="h-20 bg-white/80 backdrop-blur-md flex items-center justify-between px-10 border-b border-slate-100">
-            <div>
-                <h2 id="tab-title" class="text-2xl font-bold text-slate-800 tracking-tight">Lịch công tác tuần</h2>
-                <p id="week-subtitle" class="text-xs text-slate-400 font-medium uppercase tracking-widest mt-0.5">Jan 12 - Jan 18, 2026</p>
+            <div class="flex items-center space-x-4 flex-1">
+                <h2 id="tab-title" class="text-xl font-bold text-slate-800">Lịch công tác</h2>
+                <div class="relative w-64 hidden md:block">
+                    <i data-lucide="search" class="absolute left-3 top-2.5 text-slate-400 w-4 h-4"></i>
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="Tìm nội dung..." class="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-lg text-sm w-full focus:ring-2 focus:ring-indigo-200 outline-none">
+                </div>
             </div>
-            <button onclick="handleSmartSave()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center shadow-indigo-100 shadow-xl transition-all active:scale-95">
-                <i data-lucide="save" class="w-4 mr-2"></i> Lưu thay đổi
-            </button>
+            <div class="flex items-center space-x-3">
+                <div id="sync-status" class="text-[10px] text-slate-400 mr-4 font-bold">READY</div>
+                <button onclick="handleSmartSave()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold flex items-center shadow-lg transition-all active:scale-95">
+                    <i data-lucide="save" class="w-4 mr-2"></i> Lưu dữ liệu
+                </button>
+            </div>
         </header>
 
         <main class="flex-1 overflow-y-auto p-10">
-            
             <div id="dashboard" class="tab-content active">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
-                    <div id="calendar-container" class="contents"></div>
-                </div>
-            </div>
-
-            <div id="ct-chuyen-mon" class="tab-content">
-                <div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <div class="flex items-center space-x-3 mb-6">
-                        <div class="w-10 h-10 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center"><i data-lucide="file-edit" size="20"></i></div>
-                        <h3 class="text-xl font-bold">Kế hoạch giảng dạy</h3>
+                <div class="max-w-2xl mx-auto">
+                    <div class="flex items-center justify-between mb-8 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="flex items-center space-x-4">
+                            <button onclick="changeDay(-1)" class="p-2 hover:bg-slate-100 rounded-full transition-colors"><i data-lucide="chevron-left"></i></button>
+                            <div class="text-center min-w-[150px]">
+                                <h3 id="display-day-label" class="text-lg font-bold text-indigo-600 uppercase tracking-tighter">Thứ Hai</h3>
+                                <p id="display-date" class="text-sm text-slate-400 font-medium tracking-widest">12/01/2026</p>
+                            </div>
+                            <button onclick="changeDay(1)" class="p-2 hover:bg-slate-100 rounded-full transition-colors"><i data-lucide="chevron-right"></i></button>
+                        </div>
+                        <button onclick="toggleWeeklyModal(true)" class="flex items-center space-x-2 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all">
+                            <i data-lucide="calendar-days" size="14"></i>
+                            <span>XEM CẢ TUẦN</span>
+                        </button>
                     </div>
-                    <textarea id="ct-chuyen-mon-content" class="w-full h-[500px] p-6 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-purple-200 outline-none text-slate-600 leading-relaxed" placeholder="Bắt đầu nhập nội dung chuyên môn của bạn..."></textarea>
-                </div>
-            </div>
 
-            <div id="ct-chu-nhiem" class="tab-content">
-                <div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                    <div class="flex items-center space-x-3 mb-6">
-                        <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center"><i data-lucide="users" size="20"></i></div>
-                        <h3 class="text-xl font-bold">Ghi chú lớp chủ nhiệm</h3>
+                    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden min-h-[400px]">
+                        <div class="h-2 bg-indigo-600 w-full"></div>
+                        <textarea id="daily-content" oninput="updateBuffer()" class="p-10 h-[400px] text-slate-700 text-lg" placeholder="Hôm nay bạn có kế hoạch gì..."></textarea>
                     </div>
-                    <textarea id="ct-chu-nhiem-content" class="w-full h-[500px] p-6 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-emerald-200 outline-none text-slate-600 leading-relaxed" placeholder="Theo dõi nề nếp, học tập của học sinh..."></textarea>
                 </div>
             </div>
 
-            <div id="dang-phi" class="tab-content">
-                <div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-slate-100 border-t-4 border-t-red-500">
-                    <div class="flex items-center space-x-3 mb-6">
-                        <div class="w-10 h-10 bg-red-50 text-red-600 rounded-full flex items-center justify-center"><i data-lucide="flag" size="20"></i></div>
-                        <h3 class="text-xl font-bold">Hồ sơ Đảng viên</h3>
-                    </div>
-                    <textarea id="dang-cam-ket" class="w-full h-64 p-6 bg-red-50/30 rounded-2xl border-none focus:ring-2 focus:ring-red-100 outline-none text-slate-600 leading-relaxed" placeholder="Bản cam kết, nghị quyết chi bộ..."></textarea>
-                </div>
-            </div>
-
+            <div id="ct-chuyen-mon" class="tab-content"><div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm"><h3 class="font-bold mb-4">Chuyên môn</h3><textarea id="ct-chuyen-mon-content" class="h-[500px] bg-slate-50 p-6 rounded-2xl"></textarea></div></div>
+            <div id="ct-chu-nhiem" class="tab-content"><div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm"><h3 class="font-bold mb-4">Chủ nhiệm</h3><textarea id="ct-chu-nhiem-content" class="h-[500px] bg-slate-50 p-6 rounded-2xl"></textarea></div></div>
+            <div id="dang-phi" class="tab-content"><div class="max-w-4xl mx-auto bg-white p-8 rounded-3xl shadow-sm"><h3 class="font-bold mb-4">Hồ sơ Đảng</h3><textarea id="dang-cam-ket" class="h-[400px] bg-red-50/30 p-6 rounded-2xl"></textarea></div></div>
         </main>
+    </div>
+
+    <div id="weekly-modal" class="modal items-center justify-center p-6">
+        <div class="bg-white w-full max-w-6xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="font-bold text-xl">Lịch công tác tuần</h3>
+                <button onclick="toggleWeeklyModal(false)" class="p-2 hover:bg-slate-200 rounded-full"><i data-lucide="x"></i></button>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-7 gap-4 overflow-y-auto" id="weekly-grid">
+                </div>
+        </div>
     </div>
 
     <script type="module">
@@ -125,86 +118,98 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Render Calendar Cards
-        function initCalendar() {
-            const container = document.getElementById('calendar-container');
-            const now = new Date();
-            const dayOfWeek = now.getDay(); 
-            const diff = now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-            const monday = new Date(now.setDate(diff));
+        let currentViewDate = new Date();
+        let weekData = { t2: '', t3: '', t4: '', t5: '', t6: '', t7: '', cn: '' };
 
-            const days = [
-                { id: 't2', label: 'Thứ 2' }, { id: 't3', label: 'Thứ 3' }, { id: 't4', label: 'Thứ 4' },
-                { id: 't5', label: 'Thứ 5' }, { id: 't6', label: 'Thứ 6' }, { id: 't7', label: 'Thứ 7' }, { id: 'cn', label: 'C.Nhật' }
-            ];
+        // Xử lý ngày tháng
+        function updateUI() {
+            const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+            const ids = ["cn", "t2", "t3", "t4", "t5", "t6", "t7"];
+            
+            document.getElementById('display-day-label').innerText = days[currentViewDate.getDay()];
+            document.getElementById('display-date').innerText = currentViewDate.toLocaleDateString('vi-VN');
+            
+            const currentId = ids[currentViewDate.getDay()];
+            document.getElementById('daily-content').value = weekData[currentId] || '';
+        }
 
-            days.forEach((day, i) => {
-                const d = new Date(monday);
-                d.setDate(monday.getDate() + i);
-                const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-                
-                const card = document.createElement('div');
-                card.className = `calendar-card bg-white rounded-2xl p-5 flex flex-col shadow-sm ${day.id === 'cn' ? 'bg-red-50/20' : ''}`;
-                card.innerHTML = `
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${day.label}</span>
-                        <span class="text-xs font-bold ${day.id === 'cn' ? 'text-red-500' : 'text-indigo-600'}">${dateStr}</span>
+        window.changeDay = (val) => {
+            currentViewDate.setDate(currentViewDate.getDate() + val);
+            updateUI();
+        };
+
+        window.updateBuffer = () => {
+            const ids = ["cn", "t2", "t3", "t4", "t5", "t6", "t7"];
+            const currentId = ids[currentViewDate.getDay()];
+            weekData[currentId] = document.getElementById('daily-content').value;
+        };
+
+        window.toggleWeeklyModal = (show) => {
+            const modal = document.getElementById('weekly-modal');
+            if(show) {
+                modal.classList.add('active');
+                renderWeeklyGrid();
+            } else modal.classList.remove('active');
+        };
+
+        function renderWeeklyGrid() {
+            const grid = document.getElementById('weekly-grid');
+            grid.innerHTML = '';
+            const labels = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+            const ids = ["t2", "t3", "t4", "t5", "t6", "t7", "cn"];
+            
+            ids.forEach((id, i) => {
+                grid.innerHTML += `
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <p class="text-[10px] font-bold text-indigo-600 mb-2 uppercase">${labels[i]}</p>
+                        <div class="text-sm text-slate-600 whitespace-pre-wrap h-40 overflow-y-auto">${weekData[id] || '...'}</div>
                     </div>
-                    <textarea id="${day.id}" placeholder="Công việc..."></textarea>
                 `;
-                container.appendChild(card);
             });
         }
 
+        window.handleSearch = () => {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            if(!term) return;
+            // logic tìm kiếm đơn giản: báo kết quả ở console hoặc highlight
+            console.log("Searching for:", term);
+        };
+
         window.handleSmartSave = async () => {
-            const status = document.getElementById('sync-status');
-            status.innerHTML = '<div class="w-2 h-2 rounded-full bg-blue-500 animate-spin"></div><span>SAVING...</span>';
-            
+            document.getElementById('sync-status').innerText = 'SAVING...';
             try {
-                const data = {
-                    lich: {
-                        t2: document.getElementById('t2').value, t3: document.getElementById('t3').value,
-                        t4: document.getElementById('t4').value, t5: document.getElementById('t5').value,
-                        t6: document.getElementById('t6').value, t7: document.getElementById('t7').value,
-                        cn: document.getElementById('cn').value
-                    },
+                const fullPayload = {
+                    lich: weekData,
                     chuyenMon: document.getElementById('ct-chuyen-mon-content').value,
                     chuNhiem: document.getElementById('ct-chu-nhiem-content').value,
                     dang: document.getElementById('dang-cam-ket').value
                 };
-
-                await setDoc(doc(db, "teacher_data", "current_work"), data);
-                status.innerHTML = '<div class="w-2 h-2 rounded-full bg-green-500"></div><span>ALL SAVED</span>';
-            } catch (e) {
-                status.innerHTML = '<div class="w-2 h-2 rounded-full bg-red-500"></div><span>ERROR</span>';
-            }
+                await setDoc(doc(db, "teacher_data", "current_work"), fullPayload);
+                document.getElementById('sync-status').innerText = 'ALL SAVED';
+            } catch (e) { document.getElementById('sync-status').innerText = 'ERROR'; }
         };
 
         window.loadData = async () => {
             const snap = await getDoc(doc(db, "teacher_data", "current_work"));
             if (snap.exists()) {
                 const d = snap.data();
-                if(d.lich) Object.keys(d.lich).forEach(id => document.getElementById(id).value = d.lich[id]);
+                weekData = d.lich || weekData;
                 document.getElementById('ct-chuyen-mon-content').value = d.chuyenMon || '';
                 document.getElementById('ct-chu-nhiem-content').value = d.chuNhiem || '';
                 document.getElementById('dang-cam-ket').value = d.dang || '';
+                updateUI();
             }
         };
 
-        window.onload = () => { initCalendar(); loadData(); lucide.createIcons(); };
+        window.onload = () => { loadData(); lucide.createIcons(); };
     </script>
 
     <script>
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(b => {
-                b.classList.remove('bg-indigo-50', 'text-indigo-600', 'border-r-4', 'border-indigo-600');
-            });
-            const btn = document.getElementById('btn-' + tabId);
-            btn.classList.add('bg-indigo-50', 'text-indigo-600', 'border-r-4', 'border-indigo-600');
-            const titles = {'dashboard': 'Lịch công tác tuần', 'ct-chuyen-mon': 'Công tác Chuyên môn', 'ct-chu-nhiem': 'Công tác Chủ nhiệm', 'dang-phi': 'Hồ sơ Đảng viên'};
-            document.getElementById('tab-title').innerText = titles[tabId];
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('bg-indigo-50', 'text-indigo-600', 'border-r-4', 'border-indigo-600'));
+            document.getElementById('btn-' + tabId).classList.add('bg-indigo-50', 'text-indigo-600', 'border-r-4', 'border-indigo-600');
         }
     </script>
 </body>
