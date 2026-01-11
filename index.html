@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartTeacher - Trợ lý Giáo viên THPT</title>
+    <title>SmartTeacher - Đa Collection Firebase</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -20,7 +20,7 @@
             <i data-lucide="cpu" class="mr-2 text-yellow-400"></i> SmartTeacher
         </div>
         <nav class="flex-1 mt-6">
-            <button onclick="showTab('dashboard')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent active-nav" id="btn-dashboard">
+            <button onclick="showTab('dashboard')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-dashboard">
                 <i data-lucide="layout-dashboard" class="mr-3 w-5"></i> Bảng điều khiển
             </button>
             <button onclick="showTab('chuyen-mon')" class="nav-item w-full flex items-center px-6 py-4 hover:bg-indigo-800 transition-all border-l-4 border-transparent" id="btn-chuyen-mon">
@@ -33,144 +33,134 @@
                 <i data-lucide="shield-check" class="mr-3 w-5"></i> Công tác Đảng
             </button>
         </nav>
-        <div class="p-4 bg-indigo-950 text-xs text-indigo-300">
-            Hệ thống hỗ trợ GDPT 2018 & TT 22
+        <div id="sync-status" class="p-4 bg-indigo-950 text-[10px] text-indigo-400 flex items-center">
+            <i data-lucide="cloud-check" class="w-3 mr-2"></i> Hệ thống sẵn sàng
         </div>
     </aside>
 
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col overflow-hidden">
         <header class="h-16 bg-white shadow-sm flex items-center justify-between px-8">
             <h2 id="tab-title" class="text-xl font-semibold text-gray-800">Bảng điều khiển</h2>
-            <div class="flex items-center space-x-4">
-                <div class="text-right">
-                    <p class="text-sm font-medium text-gray-700">GV. Nguyễn Văn A</p>
-                    <p class="text-xs text-gray-500">Trường THPT Chuyên</p>
-                </div>
-                <div class="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold">A</div>
-            </div>
+            <button id="main-save-btn" onclick="handleSmartSave()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg text-sm flex items-center shadow-md transition-all">
+                <i data-lucide="save" class="w-4 mr-2"></i> Lưu dữ liệu
+            </button>
         </header>
 
         <main class="flex-1 overflow-y-auto p-8">
-            
-            <div id="dashboard" class="tab-content active">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-blue-500">
-                        <p class="text-gray-500 text-sm">Giáo án tuần tới</p>
-                        <h3 class="text-2xl font-bold text-gray-800">05/12</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-yellow-500">
-                        <p class="text-gray-500 text-sm">Học sinh cần lưu ý</p>
-                        <h3 class="text-2xl font-bold text-gray-800">03 em</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-b-4 border-red-500">
-                        <p class="text-gray-500 text-sm">Hạn nộp báo cáo Đảng</p>
-                        <h3 class="text-2xl font-bold text-gray-800">2 ngày</h3>
-                    </div>
-                </div>
-                <h4 class="font-semibold text-gray-700 mb-4">Lối tắt nhanh</h4>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button class="p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition text-center border border-gray-100">
-                        <i data-lucide="plus-circle" class="mx-auto mb-2 text-indigo-600"></i> Soạn bài mới
-                    </button>
-                    </div>
+            <div id="dashboard" class="tab-content active text-center py-20">
+                <i data-lucide="sparkles" class="w-16 h-16 mx-auto text-indigo-200 mb-4"></i>
+                <h3 class="text-2xl font-bold text-gray-700">Chào buổi làm việc, Giáo viên!</h3>
+                <p class="text-gray-500 mt-2">Chọn các thư mục bên trái để bắt đầu quản lý chuyên môn và hồ sơ Đảng.</p>
             </div>
 
             <div id="chuyen-mon" class="tab-content">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i data-lucide="brain" class="mr-2 text-purple-600"></i> Trợ lý soạn giảng AI</h3>
-                        <p class="text-sm text-gray-600 mb-4">Tự động tạo giáo án 5512, ma trận đề thi và gợi ý bài giảng sinh động.</p>
-                        <textarea class="w-full p-3 border rounded-lg text-sm bg-gray-50" placeholder="Nhập tên bài học..."></textarea>
-                        <button class="mt-3 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-indigo-700">Tạo giáo án</button>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <h3 class="font-bold text-gray-800 mb-3 flex items-center"><i data-lucide="library" class="mr-2 text-blue-600"></i> Học liệu số & Pháp quy</h3>
-                        <ul class="text-sm space-y-2">
-                            <li class="flex items-center text-blue-600 hover:underline cursor-pointer"><i data-lucide="external-link" class="w-4 mr-2"></i> Thông tư 22/2021/TT-BGDĐT</li>
-                            <li class="flex items-center text-blue-600 hover:underline cursor-pointer"><i data-lucide="external-link" class="w-4 mr-2"></i> Chương trình GDPT 2018 - Môn Toán</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <div id="hanh-chinh" class="tab-content">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="p-4 border-b">Loại sổ sách</th>
-                                <th class="p-4 border-b">Trạng thái</th>
-                                <th class="p-4 border-b">Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-sm">
-                            <tr>
-                                <td class="p-4 border-b">Sổ điểm lớp 12A1</td>
-                                <td class="p-4 border-b"><span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">Đã hoàn thành</span></td>
-                                <td class="p-4 border-b text-indigo-600 hover:underline cursor-pointer font-medium">Cập nhật</td>
-                            </tr>
-                            <tr>
-                                <td class="p-4 border-b">Báo cáo chủ nhiệm tháng 01</td>
-                                <td class="p-4 border-b"><span class="px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">Chưa nộp</span></td>
-                                <td class="p-4 border-b text-indigo-600 hover:underline cursor-pointer font-medium">Soạn ngay</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-gray-800 mb-4 flex items-center"><i data-lucide="brain" class="mr-2 text-purple-600"></i> Giáo án & Học liệu số</h3>
+                    <textarea id="giao-an-content" class="w-full h-80 p-4 border rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Viết nội dung bài giảng hoặc kế hoạch dạy học tại đây..."></textarea>
                 </div>
             </div>
 
             <div id="dang-phi" class="tab-content">
-                <div class="max-w-3xl mx-auto space-y-6">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-red-600">
-                        <h3 class="text-lg font-bold text-red-700 mb-4 flex items-center"><i data-lucide="award" class="mr-2"></i> Hồ sơ Đảng viên</h3>
-                        <div class="space-y-3">
-                            <div class="flex justify-between p-3 bg-red-50 rounded text-sm">
-                                <span>Bản cam kết tu dưỡng rèn luyện 2026</span>
-                                <span class="text-red-600 font-bold italic underline cursor-pointer">Chỉnh sửa</span>
-                            </div>
-                            <div class="flex justify-between p-3 bg-gray-50 rounded text-sm">
-                                <span>Bài thu hoạch Nghị quyết TW 8</span>
-                                <span class="text-green-600 font-bold italic underline cursor-pointer">Đã lưu</span>
-                            </div>
-                        </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-red-600">
+                    <h3 class="text-lg font-bold text-red-700 mb-4 flex items-center"><i data-lucide="award" class="mr-2"></i> Hồ sơ Đảng viên</h3>
+                    <div class="space-y-4">
+                        <label class="block text-sm font-medium text-gray-700">Nội dung Bản cam kết tu dưỡng, rèn luyện 2026:</label>
+                        <textarea id="dang-cam-ket" class="w-full h-64 p-4 border rounded-lg text-sm bg-red-50 focus:ring-2 focus:ring-red-500 outline-none" placeholder="Nhập nội dung bài viết thu hoạch hoặc cam kết..."></textarea>
                     </div>
                 </div>
             </div>
 
+            <div id="hanh-chinh" class="tab-content text-center py-20 text-gray-400">
+                Chức năng quản lý điểm số theo Thông tư 22 đang được thiết lập...
+            </div>
         </main>
     </div>
 
-    <script>
-        // Khởi tạo icons
-        lucide.createIcons();
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Hàm chuyển Tab
-        function showTab(tabId) {
-            // Ẩn tất cả tab
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            // Hiện tab được chọn
-            document.getElementById(tabId).classList.add('active');
+        const firebaseConfig = {
+            apiKey: "AIzaSyD9wkERSRenvs4kDTysTNrA9tzY693eP0E",
+            authDomain: "chuyenmon-6e390.firebaseapp.com",
+            projectId: "chuyenmon-6e390",
+            storageBucket: "chuyenmon-6e390.firebasestorage.app",
+            messagingSenderId: "805143760335",
+            appId: "1:805143760335:web:57802c31545590ae9916ba",
+            measurementId: "G-B79Q8JC1HN"
+        };
 
-            // Cập nhật Style Sidebar
-            document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.classList.remove('bg-indigo-800', 'border-yellow-400');
-            });
-            document.getElementById('btn-' + tabId).classList.add('bg-indigo-800', 'border-yellow-400');
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-            // Cập nhật Tiêu đề Header
-            const labels = {
-                'dashboard': 'Bảng điều khiển',
-                'chuyen-mon': 'Chuyên môn',
-                'hanh-chinh': 'Hành chính',
-                'dang-phi': 'Công tác Đảng'
-            };
-            document.getElementById('tab-title').innerText = labels[tabId];
+        // --- CÁC HÀM LƯU THEO COLLECTION ---
+
+        window.handleSmartSave = async () => {
+            const currentTab = document.querySelector('.tab-content.active').id;
+            const status = document.getElementById('sync-status');
+            status.innerHTML = '<i data-lucide="refresh-cw" class="w-3 mr-2 animate-spin"></i> Đang tải...';
+            lucide.createIcons();
+
+            try {
+                if (currentTab === 'chuyen-mon') {
+                    const content = document.getElementById('giao-an-content').value;
+                    await setDoc(doc(db, "chuyen_mon", "giao_an_hien_tai"), {
+                        noi_dung: content,
+                        ngay_cap_nhat: new Date().toLocaleString('vi-VN')
+                    });
+                    showToast("Đã lưu vào Chuyên môn!");
+                } 
+                else if (currentTab === 'dang-phi') {
+                    const camKet = document.getElementById('dang-cam-ket').value;
+                    await setDoc(doc(db, "cong_tac_dang", "ho_so_2026"), {
+                        noi_dung_cam_ket: camKet,
+                        ngay_ky: new Date().toLocaleString('vi-VN')
+                    });
+                    showToast("Đã lưu vào Hồ sơ Đảng!");
+                }
+                else {
+                    showToast("Không có dữ liệu để lưu ở tab này.");
+                }
+            } catch (e) {
+                alert("Lỗi: " + e.message);
+                status.innerHTML = '<i data-lucide="cloud-off" class="w-3 mr-2 text-red-400"></i> Lỗi kết nối';
+                lucide.createIcons();
+            }
+        };
+
+        window.loadData = async () => {
+            // Tải dữ liệu chuyên môn
+            const docCM = await getDoc(doc(db, "chuyen_mon", "giao_an_hien_tai"));
+            if (docCM.exists()) document.getElementById('giao-an-content').value = docCM.data().noi_dung;
+
+            // Tải dữ liệu Đảng
+            const docDang = await getDoc(doc(db, "cong_tac_dang", "ho_so_2026"));
+            if (docDang.exists()) document.getElementById('dang-cam-ket').value = docDang.data().noi_dung_cam_ket;
+        };
+
+        function showToast(msg) {
+            const status = document.getElementById('sync-status');
+            status.innerHTML = `<i data-lucide="check-circle" class="w-3 mr-2 text-green-400"></i> ${msg}`;
+            lucide.createIcons();
         }
 
-        // Mặc định tab đầu tiên
-        showTab('dashboard');
+        window.onload = () => {
+            lucide.createIcons();
+            loadData();
+        };
+    </script>
+
+    <script>
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('bg-indigo-800', 'border-yellow-400'));
+            document.getElementById('btn-' + tabId).classList.add('bg-indigo-800', 'border-yellow-400');
+            
+            const titles = {'dashboard': 'Bảng điều khiển', 'chuyen-mon': 'Chuyên môn', 'hanh-chinh': 'Hành chính', 'dang-phi': 'Công tác Đảng'};
+            document.getElementById('tab-title').innerText = titles[tabId];
+        }
     </script>
 </body>
 </html>
