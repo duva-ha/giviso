@@ -1,0 +1,427 @@
+import React, { useState, useEffect } from 'react';
+
+// Dữ liệu mẫu cho ứng dụng
+const DATA = {
+  theories: [
+    {
+      id: 1,
+      title: "Hệ Mặt Trời",
+      content: "Hệ Mặt Trời bao gồm Mặt Trời và các thiên thể quay quanh nó, bao gồm 8 hành tinh: Thủy tinh, Kim tinh, Trái Đất, Hỏa tinh, Mộc tinh, Thổ tinh, Thiên Vương tinh và Hải Vương tinh.",
+      icon: "☀️"
+    },
+    {
+      id: 2,
+      title: "Quang hợp là gì?",
+      content: "Quang hợp là quá trình thực vật sử dụng năng lượng ánh sáng mặt trời để tổng hợp chất hữu cơ từ khí cacbonic và nước, đồng thời giải phóng khí oxy.",
+      icon: "🌱"
+    },
+    {
+      id: 3,
+      title: "Nước và sự sống",
+      content: "Nước chiếm khoảng 70% bề mặt Trái Đất và khoảng 60-70% trọng lượng cơ thể con người. Nước là dung môi hòa tan nhiều chất dinh dưỡng cần thiết cho cơ thể.",
+      icon: "💧"
+    }
+  ],
+  quiz: [
+    {
+      id: 1,
+      question: "Hành tinh nào gần Mặt Trời nhất?",
+      options: ["Trái Đất", "Thủy Tinh", "Hỏa Tinh", "Kim Tinh"],
+      correct: 1 // Index of correct answer
+    },
+    {
+      id: 2,
+      question: "Động vật nào sau đây là loài lưỡng cư?",
+      options: ["Cá sấu", "Ếch", "Rắn", "Thằn lằn"],
+      correct: 1
+    },
+    {
+      id: 3,
+      question: "Công thức hóa học của nước là gì?",
+      options: ["HO", "H2O", "O2H", "CO2"],
+      correct: 1
+    },
+    {
+      id: 4,
+      question: "Việt Nam nằm ở châu lục nào?",
+      options: ["Châu Âu", "Châu Mỹ", "Châu Á", "Châu Phi"],
+      correct: 2
+    }
+  ],
+  explore: [
+    {
+      title: "Bạn có biết?",
+      text: "Mật ong là loại thực phẩm duy nhất không bao giờ bị hỏng. Người ta đã tìm thấy mật ong trong các ngôi mộ Ai Cập cổ đại vẫn còn ăn được!",
+      color: "bg-orange-100 border-orange-300 text-orange-800"
+    },
+    {
+      title: "Kỷ lục thế giới",
+      text: "Loài động vật lớn nhất hành tinh là Cá voi xanh. Trái tim của nó lớn đến mức một con người có thể bơi trong các động mạch!",
+      color: "bg-blue-100 border-blue-300 text-blue-800"
+    },
+    {
+      title: "Vũ trụ bao la",
+      text: "Một ngày trên sao Kim dài hơn một năm trên sao Kim. Nó quay quanh trục của mình chậm hơn quay quanh Mặt Trời.",
+      color: "bg-purple-100 border-purple-300 text-purple-800"
+    }
+  ]
+};
+
+// Component: SVG Icons để không phụ thuộc thư viện ngoài
+const Icons = {
+  Book: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-blue-500">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>
+  ),
+  Check: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-green-500">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+  ),
+  Compass: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-4 text-purple-500">
+      <circle cx="12" cy="12" r="10"></circle>
+      <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+    </svg>
+  ),
+  Back: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="19" y1="12" x2="5" y2="12"></line>
+      <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+  ),
+  User: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+  ),
+  LogOut: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+      <polyline points="16 17 21 12 16 7"></polyline>
+      <line x1="21" y1="12" x2="9" y2="12"></line>
+    </svg>
+  )
+};
+
+export default function App() {
+  const [user, setUser] = useState(null);
+  const [currentView, setCurrentView] = useState('login'); // login, dashboard, theory, quiz, explore
+  const [formData, setFormData] = useState({ name: '', classRoom: '' });
+
+  // Login handler
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (formData.name && formData.classRoom) {
+      setUser(formData);
+      setCurrentView('dashboard');
+    }
+  };
+
+  // Render Login Screen
+  if (currentView === 'login') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md transform transition-all hover:scale-105 duration-300">
+          <div className="text-center mb-8">
+            <div className="bg-blue-100 p-4 rounded-full w-20 h-20 mx-auto flex items-center justify-center mb-4">
+              <span className="text-4xl">🎓</span>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800">Góc Học Tập</h1>
+            <p className="text-gray-500 mt-2">Vui lòng nhập thông tin để bắt đầu</p>
+          </div>
+          
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Họ và Tên</label>
+              <input
+                type="text"
+                required
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                placeholder="Ví dụ: Nguyễn Văn A"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Lớp Học</label>
+              <input
+                type="text"
+                required
+                className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                placeholder="Ví dụ: 5A"
+                value={formData.classRoom}
+                onChange={(e) => setFormData({...formData, classRoom: e.target.value})}
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-xl transform active:scale-95"
+            >
+              Vào Học Ngay
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  // Header Component (used in all internal pages)
+  const Header = () => (
+    <div className="bg-white shadow-sm sticky top-0 z-10">
+      <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          {currentView !== 'dashboard' && (
+            <button 
+              onClick={() => setCurrentView('dashboard')}
+              className="p-2 hover:bg-gray-100 rounded-full mr-2 transition-colors"
+            >
+              <Icons.Back />
+            </button>
+          )}
+          <div className="flex flex-col">
+            <span className="font-bold text-gray-800 text-lg flex items-center gap-2">
+               Xin chào, {user.name}
+            </span>
+            <span className="text-xs text-gray-500 font-medium bg-blue-100 px-2 py-0.5 rounded-full w-fit">
+              Lớp {user.classRoom}
+            </span>
+          </div>
+        </div>
+        <button 
+          onClick={() => {
+            setUser(null);
+            setCurrentView('login');
+            setFormData({ name: '', classRoom: '' });
+          }}
+          className="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+        >
+          <Icons.LogOut />
+          <span className="hidden sm:inline">Thoát</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  // Render Dashboard
+  if (currentView === 'dashboard') {
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Hôm nay bạn muốn làm gì?</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Card 1: Lý thuyết */}
+            <div 
+              onClick={() => setCurrentView('theory')}
+              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-2 border-b-4 border-blue-500 group"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="p-4 bg-blue-50 rounded-full mb-4 group-hover:bg-blue-100 transition-colors">
+                  <Icons.Book />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Lý Thuyết</h3>
+                <p className="text-gray-500 text-sm">Ôn tập kiến thức và bài học mới.</p>
+              </div>
+            </div>
+
+            {/* Card 2: Kiểm tra */}
+            <div 
+              onClick={() => setCurrentView('quiz')}
+              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-2 border-b-4 border-green-500 group"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="p-4 bg-green-50 rounded-full mb-4 group-hover:bg-green-100 transition-colors">
+                   <Icons.Check />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Kiểm Tra</h3>
+                <p className="text-gray-500 text-sm">Thử sức với các bài trắc nghiệm vui.</p>
+              </div>
+            </div>
+
+            {/* Card 3: Khám phá */}
+            <div 
+              onClick={() => setCurrentView('explore')}
+              className="bg-white p-8 rounded-2xl shadow-md hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-2 border-b-4 border-purple-500 group"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="p-4 bg-purple-50 rounded-full mb-4 group-hover:bg-purple-100 transition-colors">
+                  <Icons.Compass />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Khám Phá</h3>
+                <p className="text-gray-500 text-sm">Tìm hiểu những điều thú vị quanh ta.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Theory View
+  if (currentView === 'theory') {
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans">
+        <Header />
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <span className="text-3xl">📚</span> Góc Lý Thuyết
+          </h2>
+          <div className="space-y-4">
+            {DATA.theories.map((theory) => (
+              <div key={theory.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                <div className="flex items-start gap-4">
+                  <div className="text-4xl p-2 bg-gray-50 rounded-xl">{theory.icon}</div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800 mb-2">{theory.title}</h3>
+                    <p className="text-gray-600 leading-relaxed">{theory.content}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Quiz View
+  if (currentView === 'quiz') {
+    const [currentQuestion, setCurrentQuestion] = useState(0);
+    const [score, setScore] = useState(0);
+    const [showResult, setShowResult] = useState(false);
+    const [selectedOption, setSelectedOption] = useState(null);
+
+    const handleAnswer = (optionIndex) => {
+      setSelectedOption(optionIndex);
+      
+      // Delay to show selection effect before moving next
+      setTimeout(() => {
+        if (optionIndex === DATA.quiz[currentQuestion].correct) {
+          setScore(score + 1);
+        }
+        
+        if (currentQuestion + 1 < DATA.quiz.length) {
+          setCurrentQuestion(currentQuestion + 1);
+          setSelectedOption(null);
+        } else {
+          setShowResult(true);
+        }
+      }, 500);
+    };
+
+    const resetQuiz = () => {
+      setCurrentQuestion(0);
+      setScore(0);
+      setShowResult(false);
+      setSelectedOption(null);
+    };
+
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans">
+        <Header />
+        <div className="max-w-2xl mx-auto px-4 py-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <span className="text-3xl">✍️</span> Bài Kiểm Tra Nhanh
+          </h2>
+
+          {!showResult ? (
+            <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+              <div className="bg-blue-600 px-6 py-4 flex justify-between items-center text-white">
+                <span className="font-bold">Câu hỏi {currentQuestion + 1}/{DATA.quiz.length}</span>
+                <span className="bg-blue-500 px-3 py-1 rounded-full text-sm">Điểm: {score}</span>
+              </div>
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-gray-800 mb-8">{DATA.quiz[currentQuestion].question}</h3>
+                <div className="space-y-3">
+                  {DATA.quiz[currentQuestion].options.map((option, index) => (
+                    <button
+                      key={index}
+                      disabled={selectedOption !== null}
+                      onClick={() => handleAnswer(index)}
+                      className={`w-full text-left p-4 rounded-xl border-2 transition-all font-medium flex justify-between items-center
+                        ${selectedOption === index 
+                          ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                          : 'border-gray-100 hover:border-blue-300 hover:bg-gray-50 text-gray-600'
+                        }`}
+                    >
+                      {option}
+                      {selectedOption === index && <span className="text-blue-500">Selected</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl shadow-lg p-8 text-center animate-fade-in">
+              <div className="text-6xl mb-4">🏆</div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Hoàn Thành!</h3>
+              <p className="text-gray-500 mb-6">Bạn đã trả lời đúng <strong className="text-blue-600 text-xl">{score}/{DATA.quiz.length}</strong> câu hỏi.</p>
+              
+              <div className="w-full bg-gray-200 rounded-full h-4 mb-8">
+                <div 
+                  className="bg-blue-600 h-4 rounded-full transition-all duration-1000" 
+                  style={{ width: `${(score / DATA.quiz.length) * 100}%` }}
+                ></div>
+              </div>
+
+              <button
+                onClick={resetQuiz}
+                className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
+              >
+                Làm lại bài
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Render Explore View
+  if (currentView === 'explore') {
+    return (
+      <div className="min-h-screen bg-gray-50 font-sans">
+        <Header />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <span className="text-3xl">🚀</span> Khám Phá Thế Giới
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {DATA.explore.map((item, index) => (
+              <div key={index} className={`p-6 rounded-2xl border-l-8 shadow-sm hover:shadow-md transition-all ${item.color.replace('text-', 'border-')}`}>
+                <div className="flex items-center mb-3">
+                  <span className="text-2xl mr-3">💡</span>
+                  <h3 className={`font-bold text-lg ${item.color.split(' ')[2]}`}>{item.title}</h3>
+                </div>
+                <p className="text-gray-700 leading-relaxed">
+                  {item.text}
+                </p>
+              </div>
+            ))}
+            
+            {/* Interactive Element Placeholder */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-6 rounded-2xl text-white shadow-lg flex flex-col justify-center items-center text-center col-span-1 md:col-span-2">
+               <span className="text-4xl mb-4">🌌</span>
+               <h3 className="font-bold text-xl mb-2">Hũ Kiến Thức Bí Ẩn</h3>
+               <p className="opacity-90 mb-4">Bấm vào đây để nhận một kiến thức ngẫu nhiên!</p>
+               <button 
+                onClick={() => alert("🐧 Chim cánh cụt có thể nhảy cao tới 1.8 mét!")}
+                className="bg-white text-indigo-600 px-6 py-2 rounded-full font-bold hover:bg-opacity-90 transition-all"
+               >
+                 Mở ra xem
+               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
