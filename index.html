@@ -3,242 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartTeacher Pro - Cloud Storage</title>
+    <title>SmartTeacher Pro - Master Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcfdfe; }
-        .page-content { display: none; animation: slideUp 0.4s ease-out; padding-bottom: 150px; }
+        .page-content { display: none; animation: slideUp 0.4s ease-out; padding-bottom: 120px; }
         .page-content.active { display: block; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        textarea { resize: none; border: none; outline: none; background: transparent; width: 100%; min-height: 150px; font-size: 14px; color: #475569; }
-        .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 2.5rem; transition: all 0.3s ease; display: flex; flex-direction: column; }
-        .file-tag { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px 14px; border-radius: 16px; margin-top: 8px; border: 1px solid #f1f5f9; transition: all 0.2s; }
-        .file-tag:hover { background: #f1f5f9; }
-        #plus-menu.active { display: block; animation: menuPop 0.2s ease-out; }
+        textarea { resize: none; border: none; outline: none; background: transparent; width: 100%; min-height: 250px; font-size: 14px; color: #475569; line-height: 1.6; }
+        .nav-item.active { color: #2563eb; font-weight: 700; }
+        .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 2.5rem; transition: all 0.3s ease; }
+        .add-menu-active { transform: rotate(45deg); background-color: #ef4444 !important; }
+        #add-menu.active { display: block; animation: menuPop 0.2s ease-out; }
         @keyframes menuPop { from { opacity: 0; transform: translate(-50%, 20px) scale(0.9); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
-        .loading-ring { border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; width: 14px; height: 14px; animation: spin 1s linear infinite; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        /* Style cho danh sách file */
+        .file-item { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 10px; border-radius: 12px; margin-top: 8px; border: 1px solid #f1f5f9; }
+        .loading-spinner { border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; width: 12px; height: 12px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="text-slate-900">
 
     <header class="fixed top-0 left-0 right-0 bg-white/70 backdrop-blur-xl z-40 px-6 py-5 border-b border-slate-50">
-        <div class="max-w-6xl mx-auto relative text-center">
-            <h1 class="font-bold text-slate-800">SMART TEACHER CLOUD</h1>
+        <div class="max-w-6xl mx-auto relative">
+            <i data-lucide="search" class="absolute left-4 top-3 text-slate-400 w-5 h-5"></i>
+            <input type="text" placeholder="Tìm kiếm tài liệu, hồ sơ..." class="w-full pl-12 pr-4 py-3 bg-slate-100/50 border-none rounded-2xl text-sm outline-none focus:ring-2 focus:ring-blue-100 transition-all">
         </div>
     </header>
 
-    <main class="max-w-4xl mx-auto pt-24 px-6">
-        <div id="home" class="page-content active space-y-8">
-            <div class="bg-blue-600 rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden">
-                <h2 class="text-2xl font-bold mb-2">Hệ thống lưu trữ đám mây</h2>
-                <p class="text-blue-100 text-sm">Tải hồ sơ lên và xem trực tuyến mọi lúc mọi nơi.</p>
-                <i data-lucide="cloud-lightning" class="absolute right-[-20px] bottom-[-20px] w-40 h-40 text-white/10 -rotate-12"></i>
+    <main class="max-w-6xl mx-auto pt-28 px-6">
+        <div id="home" class="page-content active space-y-10">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-1 bg-blue-600 rounded-[3rem] p-8 text-white shadow-2xl relative overflow-hidden flex flex-col justify-center min-h-[280px]">
+                    <div class="relative z-10">
+                        <p id="date-now" class="text-blue-100 text-[10px] font-bold uppercase tracking-[0.2em] mb-2"></p>
+                        <h2 class="text-2xl font-bold mb-4">Lịch dạy hôm nay</h2>
+                        <div class="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10 inline-block text-sm">Lớp: 12A1 (Sáng)</div>
+                    </div>
+                    <i data-lucide="calendar" class="absolute right-[-10%] bottom-[-10%] w-44 h-44 text-white/10 -rotate-12"></i>
+                </div>
+                <div class="lg:col-span-2 glass-card p-8 flex flex-col justify-center overflow-x-auto no-scrollbar">
+                    <table class="w-full text-center border-collapse text-[11px] font-bold">
+                        <thead><tr class="text-slate-300 uppercase"><th class="pb-4">Tiết</th><th>T2</th><th>T3</th><th>T4</th><th>T5</th><th>T6</th><th>T7</th></tr></thead>
+                        <tbody>
+                            <tr><td class="py-2 text-slate-300">1</td><td class="p-1"><div class="bg-blue-50 text-blue-600 py-2 rounded-xl">12A1</div></td><td class="p-1"></td><td class="p-1"><div class="bg-indigo-50 text-indigo-600 py-2 rounded-xl">10B2</div></td><td class="p-1"></td><td class="p-1"><div class="bg-blue-50 text-blue-600 py-2 rounded-xl">12A1</div></td><td class="p-1"></td></tr>
+                            <tr><td class="py-2 text-slate-300">2</td><td class="p-1"><div class="bg-blue-50 text-blue-600 py-2 rounded-xl">12A1</div></td><td class="p-1"><div class="bg-emerald-50 text-emerald-600 py-2 rounded-xl">11C3</div></td><td class="p-1"></td><td class="p-1"><div class="bg-orange-50 text-orange-600 py-2 rounded-xl">SH</div></td><td class="p-1"></td><td class="p-1"><div class="bg-blue-50 text-blue-600 py-2 rounded-xl">12A1</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            
-            <div class="grid grid-cols-2 gap-4">
-                <button onclick="showPage('page-chuyen-mon')" class="glass-card p-8 items-center space-y-3">
+
+            <section class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <button onclick="showPage('page-chuyen-mon')" class="glass-card p-8 flex flex-col items-center space-y-4 hover:bg-slate-50">
                     <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center"><i data-lucide="book-open"></i></div>
-                    <span class="text-xs font-bold text-slate-500 uppercase">Chuyên môn</span>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Chuyên môn</span>
                 </button>
-                <button onclick="showPage('page-chu-nhiem')" class="glass-card p-8 items-center space-y-3">
+                <button onclick="showPage('page-chu-nhiem')" class="glass-card p-8 flex flex-col items-center space-y-4 hover:bg-slate-50">
                     <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center"><i data-lucide="users"></i></div>
-                    <span class="text-xs font-bold text-slate-500 uppercase">Chủ nhiệm</span>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Chủ nhiệm</span>
                 </button>
-            </div>
+                <button onclick="showPage('page-dang')" class="glass-card p-8 flex flex-col items-center space-y-4 hover:bg-slate-50">
+                    <div class="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center"><i data-lucide="shield-check"></i></div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Đảng - Đoàn</span>
+                </button>
+                <button onclick="showPage('page-ca-nhan')" class="glass-card p-8 flex flex-col items-center space-y-4 hover:bg-slate-50">
+                    <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center"><i data-lucide="user-circle"></i></div>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Cá nhân</span>
+                </button>
+            </section>
         </div>
 
         <div id="page-chuyen-mon" class="page-content space-y-8">
-            <h2 class="text-2xl font-bold flex items-center text-blue-600"><i data-lucide="book-open" class="mr-3"></i> Chuyên môn</h2>
+            <h2 class="text-2xl font-bold px-2 flex items-center text-blue-600"><i data-lucide="book-open" class="mr-3"></i> Công tác Chuyên môn</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="glass-card p-8" id="box-db-giao-an">
                     <h4 class="text-[10px] font-bold text-blue-600 uppercase mb-4 tracking-widest">Giáo án</h4>
                     <textarea id="db-giao-an" placeholder="Ghi chú giáo án..."></textarea>
-                    <div id="list-db-giao-an" class="mt-4 space-y-2"></div>
+                    <div id="list-db-giao-an" class="space-y-2"></div>
                 </div>
                 <div class="glass-card p-8" id="box-db-bai-giang">
                     <h4 class="text-[10px] font-bold text-blue-600 uppercase mb-4 tracking-widest">Bài giảng</h4>
-                    <textarea id="db-bai-giang" placeholder="Ghi chú bài giảng..."></textarea>
-                    <div id="list-db-bai-giang" class="mt-4 space-y-2"></div>
+                    <textarea id="db-bai-giang" placeholder="Link bài giảng..."></textarea>
+                    <div id="list-db-bai-giang" class="space-y-2"></div>
                 </div>
             </div>
         </div>
-
-        <div id="page-chu-nhiem" class="page-content space-y-8">
-            <h2 class="text-2xl font-bold flex items-center text-orange-600"><i data-lucide="users" class="mr-3"></i> Chủ nhiệm</h2>
-            <div class="glass-card p-8" id="box-db-ds-hs">
-                <h4 class="text-[10px] font-bold text-orange-600 uppercase mb-4 tracking-widest">Hồ sơ học sinh</h4>
-                <textarea id="db-ds-hs" placeholder="Ghi chú lớp..."></textarea>
-                <div id="list-db-ds-hs" class="mt-4 space-y-2"></div>
-            </div>
-        </div>
-    </main>
+        </main>
 
     <div class="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center">
-        <div id="plus-menu" class="hidden mb-6 bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-slate-100 w-72 overflow-hidden p-4">
-            <p class="text-[10px] font-bold text-slate-400 uppercase px-4 mb-3 tracking-widest text-center">Tải file lên Cloud</p>
+        <div id="add-menu" class="hidden mb-6 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 p-4 w-64">
+            <p class="text-[10px] font-bold text-slate-400 uppercase px-4 mb-3 tracking-widest text-center">Tải file lên...</p>
             <div class="space-y-1">
-                <button onclick="uploadAction('page-chuyen-mon', 'db-giao-an')" class="w-full text-left p-3 hover:bg-blue-50 rounded-2xl flex items-center group">
-                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mr-3"><i data-lucide="file-text" size="14"></i></div>
+                <button onclick="uploadAction('page-chuyen-mon', 'db-giao-an')" class="w-full flex items-center p-3 hover:bg-blue-50 rounded-2xl transition-all group">
+                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mr-3"><i data-lucide="file-text" size="16"></i></div>
                     <span class="text-sm font-bold text-slate-700">Giáo án</span>
                 </button>
-                <button onclick="uploadAction('page-chuyen-mon', 'db-bai-giang')" class="w-full text-left p-3 hover:bg-blue-50 rounded-2xl flex items-center group">
-                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mr-3"><i data-lucide="monitor-play" size="14"></i></div>
+                <button onclick="uploadAction('page-chuyen-mon', 'db-bai-giang')" class="w-full flex items-center p-3 hover:bg-blue-50 rounded-2xl transition-all group">
+                    <div class="w-8 h-8 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mr-3"><i data-lucide="monitor-play" size="16"></i></div>
                     <span class="text-sm font-bold text-slate-700">Bài giảng</span>
                 </button>
-                <button onclick="uploadAction('page-chu-nhiem', 'db-ds-hs')" class="w-full text-left p-3 hover:bg-orange-50 rounded-2xl flex items-center group">
-                    <div class="w-8 h-8 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mr-3"><i data-lucide="users" size="14"></i></div>
-                    <span class="text-sm font-bold text-slate-700">Hồ sơ lớp</span>
-                </button>
-                <div class="h-[1px] bg-slate-100 my-2"></div>
-                <button onclick="saveAllText()" class="w-full p-4 bg-slate-900 text-white rounded-2xl font-bold text-sm">Lưu ghi chú văn bản</button>
+                <div class="h-[1px] bg-slate-100 my-2 mx-4"></div>
+                <button onclick="saveTexts()" class="w-full p-3 bg-slate-900 text-white rounded-2xl font-bold text-sm">Lưu văn bản</button>
             </div>
         </div>
-        <button onclick="togglePlusMenu()" class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl border-4 border-white active:scale-90 transition-all">
-            <i data-lucide="plus" size="32" id="plus-icon"></i>
+        <button onclick="toggleAddMenu()" id="main-plus-btn" class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl border-4 border-white active:scale-90 transition-all">
+            <i data-lucide="plus" size="32" id="plus-icon" class="transition-transform duration-300"></i>
         </button>
     </div>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-2xl border-t border-slate-100 px-8 py-5 flex justify-between items-center z-40">
-        <button onclick="showPage('home')" class="flex flex-col items-center space-y-1"><i data-lucide="home"></i><span class="text-[9px] font-bold">TRANG CHỦ</span></button>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-2xl border-t border-slate-100 px-8 py-5 flex justify-between items-center z-40">
+        <button onclick="showPage('home')" class="nav-item active flex flex-col items-center space-y-1" id="nav-home"><i data-lucide="home" size="22"></i><span class="text-[9px] font-bold uppercase">Trang chủ</span></button>
+        <button onclick="showPage('page-chuyen-mon')" class="nav-item flex flex-col items-center space-y-1" id="nav-page-chuyen-mon"><i data-lucide="compass" size="22"></i><span class="text-[9px] font-bold uppercase">Khám phá</span></button>
         <div class="w-16"></div>
-        <button onclick="showPage('page-chuyen-mon')" class="flex flex-col items-center space-y-1"><i data-lucide="compass"></i><span class="text-[9px] font-bold">KHÁM PHÁ</span></button>
+        <button onclick="showPage('page-chu-nhiem')" class="nav-item flex flex-col items-center space-y-1" id="nav-page-chu-nhiem"><i data-lucide="clipboard-list" size="22"></i><span class="text-[9px] font-bold uppercase">Hồ sơ</span></button>
+        <button onclick="showPage('page-ca-nhan')" class="nav-item flex flex-col items-center space-y-1" id="nav-page-ca-nhan"><i data-lucide="user" size="22"></i><span class="text-[9px] font-bold uppercase">Tôi</span></button>
     </nav>
 
-    <input type="file" id="cloud-file-input" class="hidden" onchange="handleFileUpload(event)">
+    <input type="file" id="file-input-cloud" class="hidden" onchange="handleCloudUpload(event)">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        const firebaseConfig = { 
-            apiKey: "AIzaSyD9wkERSRenvs4kDTysTNrA9tzY693eP0E", 
-            authDomain: "chuyenmon-6e390.firebaseapp.com", 
-            projectId: "chuyenmon-6e390", 
-            storageBucket: "chuyenmon-6e390.firebasestorage.app", 
-            messagingSenderId: "805143760335", 
-            appId: "1:805143760335:web:57802c31545590ae9916ba" 
-        };
-
+        const firebaseConfig = { apiKey: "AIzaSyD9wkERSRenvs4kDTysTNrA9tzY693eP0E", authDomain: "chuyenmon-6e390.firebaseapp.com", projectId: "chuyenmon-6e390", storageBucket: "chuyenmon-6e390.firebasestorage.app", messagingSenderId: "805143760335", appId: "1:805143760335:web:57802c31545590ae9916ba" };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const storage = getStorage(app);
 
-        let currentTarget = '';
+        let currentUploadTarget = '';
 
         window.showPage = (id) => {
             document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
-        window.togglePlusMenu = () => {
-            document.getElementById('plus-menu').classList.toggle('hidden');
-            document.getElementById('plus-menu').classList.toggle('active');
+        window.toggleAddMenu = () => {
+            const m = document.getElementById('add-menu');
+            m.classList.toggle('hidden'); m.classList.toggle('active');
+            document.getElementById('plus-icon').classList.toggle('add-menu-active');
         };
 
         window.uploadAction = (pageId, targetId) => {
-            currentTarget = targetId;
+            currentUploadTarget = targetId;
             showPage(pageId);
-            togglePlusMenu();
-            document.getElementById('cloud-file-input').click();
+            toggleAddMenu();
+            document.getElementById('file-input-cloud').click();
         };
 
-        // XỬ LÝ TẢI FILE LÊN CLOUD THẬT
-        window.handleFileUpload = async (e) => {
+        // LOGIC TẢI LÊN STORAGE VÀ LƯU LINK VÀO FIRESTORE
+        window.handleCloudUpload = async (e) => {
             const file = e.target.files[0];
-            if(!file || !currentTarget) return;
+            if(!file || !currentUploadTarget) return;
 
-            const statusLabel = document.createElement('div');
-            statusLabel.className = 'file-tag';
-            statusLabel.innerHTML = `<span class="text-xs italic text-blue-500 flex items-center"><div class="loading-ring mr-2"></div> Đang tải lên: ${file.name}...</span>`;
-            document.getElementById('list-' + currentTarget).prepend(statusLabel);
+            const list = document.getElementById('list-' + currentUploadTarget);
+            const loader = document.createElement('div');
+            loader.className = 'file-item';
+            loader.innerHTML = `<span class="text-xs italic text-blue-500 flex items-center"><div class="loading-spinner mr-2"></div> Đang tải: ${file.name}</span>`;
+            list.prepend(loader);
 
             try {
-                // 1. Tải lên Firebase Storage
-                const storagePath = `uploads/${currentTarget}/${Date.now()}_${file.name}`;
-                const storageRef = ref(storage, storagePath);
-                await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(storageRef);
+                const path = `teacher_files/${currentUploadTarget}/${Date.now()}_${file.name}`;
+                const sRef = ref(storage, path);
+                await uploadBytes(sRef, file);
+                const url = await getDownloadURL(sRef);
 
-                // 2. Lưu thông tin vào Firestore
-                const fileInfo = { name: file.name, url: downloadURL, path: storagePath, time: Date.now() };
-                await setDoc(doc(db, "cloud_data", currentTarget), {
-                    files: arrayUnion(fileInfo)
-                }, { merge: true });
-
-                loadData(); // Làm mới danh sách
-            } catch (err) {
-                alert("Lỗi tải lên: " + err.message);
-                statusLabel.remove();
-            }
+                const fileInfo = { name: file.name, url: url, path: path };
+                await setDoc(doc(db, "work_files", currentUploadTarget), { files: arrayUnion(fileInfo) }, { merge: true });
+                
+                loadCloudData();
+            } catch (err) { alert("Lỗi: " + err.message); loader.remove(); }
         };
 
-        // XEM FILE
-        window.viewFile = (url) => { window.open(url, '_blank'); };
-
-        // XÓA FILE THẬT KHỎI CLOUD
-        window.deleteFile = async (targetId, fileInfo) => {
-            if(!confirm("Bạn chắc chắn muốn xóa file này khỏi Cloud?")) return;
+        window.deleteCloudFile = async (targetId, fileObj) => {
+            if(!confirm("Xóa file khỏi hệ thống?")) return;
             try {
-                // 1. Xóa trong Storage
-                await deleteObject(ref(storage, fileInfo.path));
-                // 2. Xóa trong Firestore
-                await updateDoc(doc(db, "cloud_data", targetId), {
-                    files: arrayRemove(fileInfo)
-                });
-                loadData();
-            } catch (err) { alert("Lỗi khi xóa: " + err.message); }
+                await deleteObject(ref(storage, fileObj.path));
+                await updateDoc(doc(db, "work_files", targetId), { files: arrayRemove(fileObj) });
+                loadCloudData();
+            } catch (err) { alert("Lỗi xóa!"); }
         };
 
-        // LƯU GHI CHÚ VĂN BẢN
-        window.saveAllText = async () => {
-            const textData = {
-                ga: document.getElementById('db-giao-an').value,
-                bg: document.getElementById('db-bai-giang').value,
-                ds: document.getElementById('db-ds-hs').value
-            };
-            await setDoc(doc(db, "cloud_data", "texts"), textData);
-            alert("Đã lưu ghi chú văn bản!");
-            togglePlusMenu();
+        window.saveTexts = async () => {
+            const d = { ga: document.getElementById('db-giao-an').value, bg: document.getElementById('db-bai-giang').value };
+            await setDoc(doc(db, "work_texts", "current"), d);
+            alert("Đã lưu văn bản!"); toggleAddMenu();
         };
 
-        window.loadData = async () => {
+        window.loadCloudData = async () => {
             // Load văn bản
-            const textSnap = await getDoc(doc(db, "cloud_data", "texts"));
-            if(textSnap.exists()) {
-                const d = textSnap.data();
-                document.getElementById('db-giao-an').value = d.ga || '';
-                document.getElementById('db-bai-giang').value = d.bg || '';
-                document.getElementById('db-ds-hs').value = d.ds || '';
+            const tSnap = await getDoc(doc(db, "work_texts", "current"));
+            if(tSnap.exists()) {
+                document.getElementById('db-giao-an').value = tSnap.data().ga || '';
+                document.getElementById('db-bai-giang').value = tSnap.data().bg || '';
             }
-
-            // Load danh sách file cho từng mục
-            const targets = ['db-giao-an', 'db-bai-giang', 'db-ds-hs'];
+            // Load file list
+            const targets = ['db-giao-an', 'db-bai-giang'];
             for (const t of targets) {
-                const snap = await getDoc(doc(db, "cloud_data", t));
-                const list = document.getElementById('list-' + t);
-                list.innerHTML = '';
+                const snap = await getDoc(doc(db, "work_files", t));
+                const container = document.getElementById('list-' + t);
+                container.innerHTML = '';
                 if(snap.exists() && snap.data().files) {
-                    snap.data().files.forEach(file => {
-                        list.innerHTML += `
-                            <div class="file-tag">
-                                <span class="text-xs font-semibold text-slate-600 truncate w-40">${file.name}</span>
+                    snap.data().files.forEach(f => {
+                        container.innerHTML += `
+                            <div class="file-item">
+                                <span class="text-xs font-bold text-slate-600 truncate w-32">${f.name}</span>
                                 <div class="flex space-x-3">
-                                    <button onclick="viewFile('${file.url}')" class="text-blue-500"><i data-lucide="eye" size="16"></i></button>
-                                    <button onclick='deleteFile("${t}", ${JSON.stringify(file)})' class="text-red-500"><i data-lucide="trash-2" size="16"></i></button>
+                                    <button onclick="window.open('${f.url}', '_blank')" class="text-blue-500"><i data-lucide="eye" size="14"></i></button>
+                                    <button onclick='deleteCloudFile("${t}", ${JSON.stringify(f)})' class="text-red-500"><i data-lucide="trash-2" size="14"></i></button>
                                 </div>
-                            </div>
-                        `;
+                            </div>`;
                     });
                 }
             }
             lucide.createIcons();
         };
 
-        window.onload = () => { loadData(); lucide.createIcons(); };
+        window.onload = () => {
+            const now = new Date(); document.getElementById('date-now').innerText = `Ngày ${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+            loadCloudData(); lucide.createIcons();
+        };
     </script>
 </body>
 </html>
