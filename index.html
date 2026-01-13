@@ -3,138 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Giáo án Cá nhân</title>
+    <title>SmartTeacher - Modern Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .page-content { display: none; padding-bottom: 100px; }
+        .page-content.active { display: block; }
+        textarea { resize: none; border: none; outline: none; background: transparent; width: 100%; }
+        .nav-bottom-item.active { color: #2563eb; }
+        .nav-bottom-item.active i { transform: translateY(-4px); color: #2563eb; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="text-slate-900">
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+    <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-40 px-6 py-4 border-b border-slate-100">
+        <div class="max-w-5xl mx-auto relative">
+            <i data-lucide="search" class="absolute left-4 top-3 text-slate-400 w-5 h-5"></i>
+            <input type="text" placeholder="Tìm giáo án, tài liệu..." class="w-full pl-12 pr-4 py-3 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-200 outline-none transition-all">
+        </div>
+    </header>
 
-        const App = () => {
-            // Mock data - Sau này bạn sẽ thay bằng dữ liệu từ Firebase Firestore
-            const [documents, setDocuments] = useState([
-                { id: 1, title: 'Giáo án Toán Tiết 1', type: 'Giáo án', date: '12/01/2026', img: 'https://via.placeholder.com/150/0047AB/FFFFFF?text=Math' },
-                { id: 2, title: 'Bài giảng Vật Lý 10', type: 'Bài giảng', date: '10/01/2026', img: 'https://via.placeholder.com/150/FF8C00/FFFFFF?text=Physics' },
-            ]);
-
-            return (
-                <div className="flex flex-col min-h-screen pb-20">
-                    {/* 1. Thanh tìm kiếm & Profile */}
-                    <header className="bg-white p-4 shadow-sm sticky top-0 z-10">
-                        <div className="flex items-center gap-3 bg-gray-100 px-4 py-2 rounded-full border border-gray-200">
-                            <i data-lucide="search" className="w-5 h-5 text-gray-400"></i>
-                            <input 
-                                type="text" 
-                                placeholder="Tìm giáo án, tài liệu..." 
-                                className="bg-transparent outline-none w-full text-sm"
-                            />
-                        </div>
-                    </header>
-
-                    {/* 2. Banner Thông báo (Giống mẫu xanh dương) */}
-                    <div className="p-4">
-                        <div className="bg-blue-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
-                            <div className="relative z-10">
-                                <h2 className="text-lg font-bold">Lịch dạy hôm nay</h2>
-                                <p className="text-sm opacity-90 mt-1">Bạn có 3 tiết tại lớp 12A1 vào buổi sáng.</p>
-                                <button className="mt-4 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-md">
-                                    Xem chi tiết
-                                </button>
-                            </div>
-                            <div className="absolute right-[-10%] top-[-10%] opacity-20">
-                                <i data-lucide="book-open" className="w-32 h-32"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* 3. Dịch vụ nhanh (4 Icon chính) */}
-                    <div className="px-4 py-2">
-                        <h3 className="font-bold text-gray-700 mb-4">Quản lý nhanh</h3>
-                        <div className="grid grid-cols-4 gap-4 bg-orange-50 p-4 rounded-2xl border border-orange-100">
-                            {[
-                                { icon: 'file-text', label: 'Giáo án', color: 'bg-blue-900' },
-                                { icon: 'presentation', label: 'Bài giảng', color: 'bg-blue-900' },
-                                { icon: 'folder-open', label: 'Tư liệu', color: 'bg-blue-900' },
-                                { icon: 'briefcase', label: 'Lớp học', color: 'bg-blue-900' },
-                            ].map((item, idx) => (
-                                <div key={idx} className="flex flex-col items-center gap-2">
-                                    <div className={`${item.color} p-3 rounded-xl text-white shadow-md`}>
-                                        <i data-lucide={item.icon} className="w-5 h-5"></i>
-                                    </div>
-                                    <span className="text-[10px] font-medium text-gray-600">{item.label}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 4. Danh sách tài liệu gần đây (Gợi ý cho bạn) */}
-                    <div className="px-4 mt-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="font-bold text-gray-700">Tài liệu gần đây</h3>
-                            <span className="text-blue-600 text-sm font-medium">Xem tất cả</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            {documents.map(doc => (
-                                <div key={doc.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                    <img src={doc.img} className="w-full h-24 object-cover" />
-                                    <div className="p-3">
-                                        <h4 className="text-sm font-bold text-gray-800 line-clamp-1">{doc.title}</h4>
-                                        <p className="text-[10px] text-gray-500 mt-1">{doc.type} • {doc.date}</p>
-                                        <div className="flex items-center mt-2 text-orange-500">
-                                            <i data-lucide="star" className="w-3 h-3 fill-current"></i>
-                                            <span className="text-[10px] ml-1 font-bold">Quan trọng</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* 5. Bottom Navigation (Dành cho Mobile) */}
-                    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex justify-around py-3 bottom-nav">
-                        <div className="flex flex-col items-center text-blue-600">
-                            <i data-lucide="home" className="w-6 h-6"></i>
-                            <span className="text-[10px] mt-1 font-medium">Trang chủ</span>
-                        </div>
-                        <div className="flex flex-col items-center text-gray-400">
-                            <i data-lucide="compass" className="w-6 h-6"></i>
-                            <span className="text-[10px] mt-1 font-medium">Khám phá</span>
-                        </div>
-                        <div className="flex flex-col items-center text-gray-400">
-                            <div className="bg-blue-600 text-white p-2 rounded-full -mt-8 shadow-lg border-4 border-white">
-                                <i data-lucide="plus" className="w-6 h-6"></i>
-                            </div>
-                            <span className="text-[10px] mt-1 font-medium">Tải lên</span>
-                        </div>
-                        <div className="flex flex-col items-center text-gray-400">
-                            <i data-lucide="clipboard-list" className="w-6 h-6"></i>
-                            <span className="text-[10px] mt-1 font-medium">Đơn hàng</span>
-                        </div>
-                        <div className="flex flex-col items-center text-gray-400">
-                            <i data-lucide="user" className="w-6 h-6"></i>
-                            <span className="text-[10px] mt-1 font-medium">Tài khoản</span>
-                        </div>
-                    </nav>
+    <main class="max-w-5xl mx-auto pt-24 px-6">
+        
+        <div id="home" class="page-content active space-y-8">
+            <div class="bg-blue-600 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-200 relative overflow-hidden">
+                <div class="relative z-10">
+                    <h2 class="text-2xl font-bold mb-2">Lịch dạy hôm nay</h2>
+                    <p class="text-blue-100 mb-6">Bạn có 3 tiết tại lớp 12A1 vào buổi sáng.</p>
+                    <button onclick="showPage('dashboard')" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all active:scale-95 shadow-lg shadow-orange-700/20">
+                        Xem chi tiết
+                    </button>
                 </div>
-            );
+                <i data-lucide="calendar" class="absolute right-[-20px] bottom-[-20px] w-48 h-48 text-blue-500/30 -rotate-12"></i>
+            </div>
+
+            <section>
+                <h3 class="text-lg font-bold mb-4 px-2">Quản lý nhanh</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button onclick="showPage('ct-chuyen-mon')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 hover:shadow-md transition-all flex flex-col items-center space-y-3">
+                        <div class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center"><i data-lucide="file-text"></i></div>
+                        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Giáo án</span>
+                    </button>
+                    <button onclick="showPage('ct-chuyen-mon')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 hover:shadow-md transition-all flex flex-col items-center space-y-3">
+                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center"><i data-lucide="monitor"></i></div>
+                        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Bài giảng</span>
+                    </button>
+                    <button onclick="showPage('ct-chuyen-mon')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 hover:shadow-md transition-all flex flex-col items-center space-y-3">
+                        <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center"><i data-lucide="folder"></i></div>
+                        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Tư liệu</span>
+                    </button>
+                    <button onclick="showPage('ct-chu-nhiem')" class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-50 hover:shadow-md transition-all flex flex-col items-center space-y-3">
+                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center"><i data-lucide="briefcase"></i></div>
+                        <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Lớp học</span>
+                    </button>
+                </div>
+            </section>
+
+            <section>
+                <div class="flex justify-between items-center mb-4 px-2">
+                    <h3 class="text-lg font-bold">Tài liệu gần đây</h3>
+                    <a href="#" class="text-blue-600 text-xs font-bold">Xem tất cả</a>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-50">
+                        <div class="h-40 bg-slate-200 flex items-center justify-center text-slate-400"><i data-lucide="image" size="48"></i></div>
+                        <div class="p-6">
+                            <h4 class="font-bold mb-1">Giáo án Toán Tiết 1</h4>
+                            <p class="text-[10px] text-slate-400 mb-2">Giáo án • 12/01/2026</p>
+                            <span class="text-[10px] text-orange-600 font-bold flex items-center"><i data-lucide="star" class="w-3 h-3 mr-1 fill-orange-600"></i> Quan trọng</span>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-3xl overflow-hidden shadow-sm border border-slate-50">
+                        <div class="h-40 bg-slate-200 flex items-center justify-center text-slate-400"><i data-lucide="image" size="48"></i></div>
+                        <div class="p-6">
+                            <h4 class="font-bold mb-1">Bài giảng Vật Lý 10</h4>
+                            <p class="text-[10px] text-slate-400 mb-2">Bài giảng • 10/01/2026</p>
+                            <span class="text-[10px] text-orange-600 font-bold flex items-center"><i data-lucide="star" class="w-3 h-3 mr-1 fill-orange-600"></i> Quan trọng</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="dashboard" class="page-content space-y-6">
+            <h2 class="text-2xl font-bold">Lịch công tác tuần</h2>
+            <div class="bg-white p-6 rounded-[2rem] shadow-xl border border-slate-50 min-h-[500px]">
+                <textarea id="lich-tuan" class="h-[450px] text-slate-600" placeholder="Ghi chú lịch tuần tại đây..."></textarea>
+            </div>
+        </div>
+
+        <div id="ct-chuyen-mon" class="page-content space-y-6">
+            <h2 class="text-2xl font-bold">Công tác Chuyên môn</h2>
+            <textarea id="ct-chuyen-mon-content" class="bg-white p-8 rounded-[2rem] shadow-xl h-[500px]" placeholder="Soạn giảng, tài liệu..."></textarea>
+        </div>
+
+        <div id="ct-chu-nhiem" class="page-content space-y-6">
+            <h2 class="text-2xl font-bold">Công tác Chủ nhiệm</h2>
+            <textarea id="ct-chu-nhiem-content" class="bg-white p-8 rounded-[2rem] shadow-xl h-[500px]" placeholder="Quản lý lớp..."></textarea>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-100 px-6 py-4 flex justify-between items-center z-50 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+        <button onclick="showPage('home')" class="nav-bottom-item active flex flex-col items-center space-y-1 transition-all" id="nav-home">
+            <i data-lucide="home" size="24"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Trang chủ</span>
+        </button>
+        <button onclick="showPage('dashboard')" class="nav-bottom-item flex flex-col items-center space-y-1 transition-all" id="nav-dashboard">
+            <i data-lucide="compass" size="24"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Khám phá</span>
+        </button>
+        <button onclick="handleSmartSave()" class="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-200 -mt-12 border-4 border-white active:scale-90 transition-transform">
+            <i data-lucide="plus" size="28"></i>
+        </button>
+        <button onclick="showPage('ct-chuyen-mon')" class="nav-bottom-item flex flex-col items-center space-y-1 transition-all" id="nav-ct-chuyen-mon">
+            <i data-lucide="clipboard-list" size="24"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Đơn hàng</span>
+        </button>
+        <button onclick="showPage('dang-phi')" class="nav-bottom-item flex flex-col items-center space-y-1 transition-all" id="nav-dang-phi">
+            <i data-lucide="user" size="24"></i>
+            <span class="text-[10px] font-bold uppercase tracking-widest">Tài khoản</span>
+        </button>
+    </nav>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD9wkERSRenvs4kDTysTNrA9tzY693eP0E",
+            authDomain: "chuyenmon-6e390.firebaseapp.com",
+            projectId: "chuyenmon-6e390",
+            storageBucket: "chuyenmon-6e390.firebasestorage.app",
+            messagingSenderId: "805143760335",
+            appId: "1:805143760335:web:57802c31545590ae9916ba"
         };
 
-        // Render app
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
-        // Khởi tạo icons sau khi render
-        setTimeout(() => lucide.createIcons(), 100);
+        window.showPage = (pageId) => {
+            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            
+            document.querySelectorAll('.nav-bottom-item').forEach(n => n.classList.remove('active'));
+            const navBtn = document.getElementById('nav-' + (pageId === 'home' ? 'home' : (pageId === 'dashboard' ? 'dashboard' : 'ct-chuyen-mon')));
+            if(navBtn) navBtn.classList.add('active');
+            
+            window.scrollTo(0, 0);
+        };
+
+        window.handleSmartSave = async () => {
+            const btn = event.currentTarget;
+            btn.classList.add('animate-spin');
+            try {
+                const payload = {
+                    lich: document.getElementById('lich-tuan').value,
+                    chuyenMon: document.getElementById('ct-chuyen-mon-content').value,
+                    chuNhiem: document.getElementById('ct-chu-nhiem-content').value
+                };
+                await setDoc(doc(db, "teacher_data", "current_work"), payload);
+                alert("Đã đồng bộ dữ liệu!");
+            } catch (e) { alert("Lỗi kết nối Firebase"); }
+            btn.classList.remove('animate-spin');
+        };
+
+        window.onload = () => { lucide.createIcons(); };
     </script>
 </body>
 </html>
