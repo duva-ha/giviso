@@ -3,35 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cloud Drop - Simple Upload</title>
+    <title>Cloud Drop - Chuyên Gia Công Nghệ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
-        .file-card { animation: slideUp 0.3s ease-out; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; color: #1e293b; }
+        .file-card { animation: slideUp 0.3s ease-out; background: white; border: 1px solid #f1f5f9; border-radius: 1.5rem; transition: all 0.2s; }
+        .file-card:hover { border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .loader { border: 2px solid #f3f3f3; border-top: 2px solid #3b82f6; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
-<body class="flex flex-col items-center justify-start min-h-screen p-6">
+<body class="flex flex-col items-center min-h-screen p-6">
 
-    <header class="w-full max-w-md mt-10 mb-8">
-        <h1 class="text-3xl font-extrabold text-slate-800 text-center tracking-tight">Cloud Storage</h1>
-        <p class="text-slate-500 text-center text-sm mt-2 font-medium">Quản lý file trực tuyến siêu tốc</p>
+    <header class="w-full max-w-md mt-12 mb-10 text-center">
+        <div class="inline-block p-3 bg-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-200 text-white">
+            <i data-lucide="cloud-upload" size="32"></i>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight">Smart Storage</h1>
+        <p class="text-slate-500 text-sm mt-2">Dự án: chuyenmon-6e390</p>
     </header>
 
-    <div id="file-list" class="w-full max-w-md space-y-3">
-        <div id="empty-state" class="text-center py-20 text-slate-400 italic text-sm">
-            Chưa có file nào. Nhấn nút + để bắt đầu.
+    <div id="file-list" class="w-full max-w-md space-y-4">
+        <div id="empty-state" class="text-center py-20 text-slate-400 italic text-sm border-2 border-dashed border-slate-200 rounded-[2rem]">
+            Chưa có dữ liệu trên Cloud.<br>Nhấn nút + để tải file đầu tiên.
         </div>
     </div>
 
-    <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
+    <div class="fixed bottom-12 left-1/2 -translate-x-1/2 z-50">
         <button onclick="document.getElementById('file-input').click()" 
-                class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-blue-300 hover:scale-110 active:scale-95 transition-all duration-300">
-            <i data-lucide="plus" size="32"></i>
+                class="w-20 h-20 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-blue-400 hover:scale-110 active:scale-90 transition-all duration-300">
+            <i data-lucide="plus" size="40"></i>
         </button>
     </div>
 
@@ -42,12 +46,12 @@
         import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-        // Cấu hình Firebase của bạn
+        // Cấu hình đã được CHUYÊN GIA cập nhật storageBucket
         const firebaseConfig = {
             apiKey: "AIzaSyD9wkERSRenvs4kDTysTNrA9tzY693eP0E",
             authDomain: "chuyenmon-6e390.firebaseapp.com",
             projectId: "chuyenmon-6e390",
-            storageBucket: "chuyenmon-6e390.firebasestorage.app",
+            storageBucket: "chuyenmon-6e390.firebasestorage.app", // Cập nhật đúng định dạng 2026
             messagingSenderId: "805143760335",
             appId: "1:805143760335:web:57802c31545590ae9916ba"
         };
@@ -59,92 +63,92 @@
         const fileListContainer = document.getElementById('file-list');
         const fileInput = document.getElementById('file-input');
 
-        // 1. XỬ LÝ TẢI FILE LÊN
+        // HÀM TẢI FILE
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Hiển thị trạng thái đang tải
             const tempId = Date.now();
             const loaderHtml = `
-                <div id="loader-${tempId}" class="file-card bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center">
-                    <div class="loader mr-3"></div>
-                    <span class="text-sm text-blue-600 font-medium italic">Đang tải: ${file.name}...</span>
+                <div id="loader-${tempId}" class="file-card p-5 flex items-center shadow-sm">
+                    <div class="loader mr-4"></div>
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold text-blue-600 italic">Đang tải lên...</span>
+                        <span class="text-[10px] text-slate-400 truncate w-40">${file.name}</span>
+                    </div>
                 </div>
             `;
             document.getElementById('empty-state').classList.add('hidden');
             fileListContainer.insertAdjacentHTML('afterbegin', loaderHtml);
 
             try {
-                // Tải lên Storage
-                const storagePath = `my_files/${tempId}_${file.name}`;
+                // TẢI LÊN STORAGE
+                const storagePath = `uploads/${tempId}_${file.name}`;
                 const storageRef = ref(storage, storagePath);
+                
+                console.log("Đang kết nối tới Bucket:", firebaseConfig.storageBucket);
                 await uploadBytes(storageRef, file);
                 const url = await getDownloadURL(storageRef);
 
-                // Lưu vào Firestore
-                await setDoc(doc(db, "storage_app", "file_list"), {
-                    files: arrayUnion({ id: tempId, name: file.name, url: url, path: storagePath })
+                // LƯU VÀO DATABASE
+                await setDoc(doc(db, "app_storage", "files"), {
+                    data: arrayUnion({ id: tempId, name: file.name, url: url, path: storagePath })
                 }, { merge: true });
 
                 loadFiles();
             } catch (error) {
-                console.error(error);
-                alert("Lỗi tải lên! Hãy đảm bảo bạn đã sửa Rules trong Firebase Storage sang 'allow read, write: if true;'");
+                console.error("LỖI HỆ THỐNG:", error);
+                alert("KHÔNG THỂ TẢI LÊN!\n\nNguyên nhân: Bạn chưa sửa Rules trong Firebase Storage.\n\nHãy vào tab Rules và sửa thành: allow read, write: if true;");
                 document.getElementById(`loader-${tempId}`).remove();
             }
         });
 
-        // 2. TẢI DANH SÁCH FILE
+        // HÀM LẤY DANH SÁCH
         async function loadFiles() {
-            const snap = await getDoc(doc(db, "storage_app", "file_list"));
-            fileListContainer.innerHTML = '';
-            
-            if (snap.exists() && snap.data().files.length > 0) {
-                document.getElementById('empty-state').classList.add('hidden');
-                // Sắp xếp file mới nhất lên đầu
-                const files = snap.data().files.reverse();
-                files.forEach(file => {
-                    const card = document.createElement('div');
-                    card.className = "file-card bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between group hover:border-blue-200 transition-all";
-                    card.innerHTML = `
-                        <div class="flex items-center space-x-3 truncate mr-4">
-                            <div class="p-2 bg-blue-50 text-blue-600 rounded-xl">
-                                <i data-lucide="file" size="20"></i>
+            try {
+                const snap = await getDoc(doc(db, "app_storage", "files"));
+                fileListContainer.innerHTML = '';
+                
+                if (snap.exists() && snap.data().data.length > 0) {
+                    const files = snap.data().data.reverse();
+                    files.forEach(file => {
+                        const card = document.createElement('div');
+                        card.className = "file-card p-5 flex items-center justify-between shadow-sm";
+                        card.innerHTML = `
+                            <div class="flex items-center space-x-4 truncate pr-2">
+                                <div class="w-10 h-10 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center">
+                                    <i data-lucide="file-text" size="20"></i>
+                                </div>
+                                <div class="flex flex-col truncate">
+                                    <span class="text-sm font-bold text-slate-700 truncate">${file.name}</span>
+                                    <span class="text-[10px] text-slate-400 uppercase font-bold">Cloud File</span>
+                                </div>
                             </div>
-                            <span class="text-sm font-semibold text-slate-700 truncate">${file.name}</span>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="window.open('${file.url}', '_blank')" class="p-2 text-slate-400 hover:text-blue-600 transition-colors">
-                                <i data-lucide="eye" size="18"></i>
+                            <button id="del-${file.id}" class="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all">
+                                <i data-lucide="trash-2" size="20"></i>
                             </button>
-                            <button id="del-${file.id}" class="p-2 text-slate-400 hover:text-red-600 transition-colors">
-                                <i data-lucide="trash-2" size="18"></i>
-                            </button>
-                        </div>
-                    `;
-                    fileListContainer.appendChild(card);
-                    
-                    // Gán sự kiện xóa
-                    document.getElementById(`del-${file.id}`).onclick = () => deleteFile(file);
-                });
-            } else {
-                fileListContainer.innerHTML = `<div id="empty-state" class="text-center py-20 text-slate-400 italic text-sm">Chưa có file nào.</div>`;
-            }
-            lucide.createIcons();
+                        `;
+                        fileListContainer.appendChild(card);
+                        document.getElementById(`del-${file.id}`).onclick = () => deleteFile(file);
+                    });
+                } else {
+                    fileListContainer.innerHTML = `<div id="empty-state" class="text-center py-20 text-slate-400 italic text-sm border-2 border-dashed border-slate-200 rounded-[2rem]">Chưa có file nào trên Cloud.</div>`;
+                }
+                lucide.createIcons();
+            } catch (e) { console.log("Lỗi tải danh sách"); }
         }
 
-        // 3. XỬ LÝ XÓA FILE
+        // HÀM XÓA FILE
         async function deleteFile(fileObj) {
-            if (!confirm(`Xóa file "${fileObj.name}" khỏi Cloud?`)) return;
+            if (!confirm(`Xác nhận xóa: ${fileObj.name}?`)) return;
             try {
                 await deleteObject(ref(storage, fileObj.path));
-                await updateDoc(doc(db, "storage_app", "file_list"), {
-                    files: arrayRemove(fileObj)
+                await updateDoc(doc(db, "app_storage", "files"), {
+                    data: arrayRemove(fileObj)
                 });
                 loadFiles();
             } catch (error) {
-                alert("Lỗi khi xóa file!");
+                alert("Lỗi khi xóa file trên Cloud!");
             }
         }
 
