@@ -3,112 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartTeacher - Professional Dashboard</title>
+    <title>SmartTeacher Pro - Modern Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .page-content { display: none; padding-bottom: 120px; }
-        .page-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        textarea { resize: none; border: none; outline: none; background: transparent; width: 100%; min-height: 250px; font-size: 14px; line-height: 1.6; color: #475569; }
-        .nav-bottom-item.active { color: #2563eb; }
-        .card-custom { transition: all 0.2s; border: 1px solid #f1f5f9; background: white; border-radius: 2rem; padding: 1.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
-        .card-custom:focus-within { border-color: #cbd5e1; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05); }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcfdfe; }
+        .page-content { display: none; animation: slideUp 0.4s ease-out; padding-bottom: 120px; }
+        .page-content.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        textarea { resize: none; border: none; outline: none; background: transparent; width: 100%; min-height: 300px; font-size: 15px; color: #334155; line-height: 1.7; }
+        .nav-item.active { color: #2563eb; }
+        .nav-item.active i { transform: scale(1.1); color: #2563eb; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(241, 245, 249, 1); border-radius: 2.5rem; }
     </style>
 </head>
 <body class="text-slate-900">
 
-    <header id="top-search" class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-40 px-6 py-4 border-b border-slate-100">
-        <div class="max-w-4xl mx-auto relative">
-            <i data-lucide="search" class="absolute left-4 top-3.5 text-slate-400 w-4 h-4"></i>
-            <input type="text" placeholder="Tìm kiếm giáo án, hồ sơ..." class="w-full pl-10 pr-4 py-3 bg-slate-100 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-200 outline-none transition-all">
+    <header class="fixed top-0 left-0 right-0 bg-white/70 backdrop-blur-xl z-50 px-6 py-5 border-b border-slate-50">
+        <div class="max-w-4xl mx-auto relative group">
+            <i data-lucide="search" class="absolute left-4 top-3 text-slate-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors"></i>
+            <input type="text" placeholder="Tìm kiếm tài liệu, giáo án..." class="w-full pl-12 pr-4 py-3 bg-slate-100/50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-blue-100 transition-all outline-none">
         </div>
     </header>
 
     <main class="max-w-4xl mx-auto pt-28 px-6">
         
-        <div id="home" class="page-content active space-y-8">
-            <div class="bg-blue-600 rounded-[2.5rem] p-8 text-white shadow-xl shadow-blue-100 relative overflow-hidden">
+        <div id="home" class="page-content active space-y-10">
+            <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-[3rem] p-10 text-white shadow-2xl shadow-blue-200 relative overflow-hidden">
                 <div class="relative z-10">
-                    <h3 id="current-date-banner" class="text-sm font-semibold opacity-80 mb-1"></h3>
-                    <h2 class="text-2xl font-bold mb-4">Lịch dạy hôm nay</h2>
-                    <div class="bg-white/20 backdrop-blur-md p-4 rounded-2xl inline-block border border-white/10">
-                        <p class="text-sm font-medium">Bạn có 3 tiết tại lớp 12A1 vào buổi sáng.</p>
+                    <p id="date-now" class="text-blue-100 text-sm font-semibold mb-2 uppercase tracking-widest"></p>
+                    <h2 class="text-3xl font-bold mb-6">Lịch dạy hôm nay</h2>
+                    <div class="bg-white/10 backdrop-blur-md rounded-3xl p-5 border border-white/20 inline-block">
+                        <p class="flex items-center text-sm font-medium">
+                            <i data-lucide="clock" class="w-4 h-4 mr-2"></i> Tiết 1-3: Vật Lý 12A1 (Phòng 302)
+                        </p>
                     </div>
                 </div>
-                <i data-lucide="calendar" class="absolute right-[-5%] bottom-[-10%] w-40 h-40 text-white/10 -rotate-12"></i>
+                <i data-lucide="calendar" class="absolute right-[-5%] bottom-[-10%] w-56 h-56 text-white/10 -rotate-12"></i>
             </div>
 
             <section>
-                <h3 class="text-lg font-bold mb-5 px-2">Quản lý nhanh</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button onclick="showPage('page-chuyen-mon')" class="card-custom flex flex-col items-center space-y-3 hover:bg-slate-50">
-                        <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center"><i data-lucide="book-open"></i></div>
-                        <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Chuyên môn</span>
+                <div class="flex justify-between items-end mb-6 px-2">
+                    <h3 class="text-xl font-bold tracking-tight text-slate-800">Quản lý chuyên sâu</h3>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <button onclick="showPage('page-chuyen-mon')" class="glass-card p-8 flex flex-col items-center space-y-4 hover:shadow-xl hover:-translate-y-1 transition-all group">
+                        <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all"><i data-lucide="book-open"></i></div>
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Chuyên môn</span>
                     </button>
-                    <button onclick="showPage('page-chu-nhiem')" class="card-custom flex flex-col items-center space-y-3 hover:bg-slate-50">
-                        <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center"><i data-lucide="users"></i></div>
-                        <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Chủ nhiệm</span>
+                    <button onclick="showPage('page-chu-nhiem')" class="glass-card p-8 flex flex-col items-center space-y-4 hover:shadow-xl hover:-translate-y-1 transition-all group">
+                        <div class="w-14 h-14 bg-orange-50 text-orange-600 rounded-[1.5rem] flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-all"><i data-lucide="users"></i></div>
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Chủ nhiệm</span>
                     </button>
-                    <button onclick="showPage('page-dang')" class="card-custom flex flex-col items-center space-y-3 hover:bg-slate-50">
-                        <div class="w-12 h-12 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center"><i data-lucide="shield-check"></i></div>
-                        <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Đảng - Đoàn</span>
+                    <button onclick="showPage('page-dang')" class="glass-card p-8 flex flex-col items-center space-y-4 hover:shadow-xl hover:-translate-y-1 transition-all group">
+                        <div class="w-14 h-14 bg-red-50 text-red-600 rounded-[1.5rem] flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-all"><i data-lucide="shield-check"></i></div>
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Đảng - Đoàn</span>
                     </button>
-                    <button onclick="showPage('page-ca-nhan')" class="card-custom flex flex-col items-center space-y-3 hover:bg-slate-50">
-                        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center"><i data-lucide="user-circle"></i></div>
-                        <span class="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Cá nhân</span>
+                    <button onclick="showPage('page-ca-nhan')" class="glass-card p-8 flex flex-col items-center space-y-4 hover:shadow-xl hover:-translate-y-1 transition-all group">
+                        <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all"><i data-lucide="user-circle"></i></div>
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Cá nhân</span>
                     </button>
                 </div>
             </section>
         </div>
 
-        <div id="page-chuyen-mon" class="page-content space-y-6">
+        <div id="page-chuyen-mon" class="page-content space-y-8">
             <h2 class="text-2xl font-bold px-2 flex items-center"><i data-lucide="book-open" class="mr-3 text-blue-600"></i> Công tác Chuyên môn</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-blue-600 uppercase mb-3 tracking-widest">Phân công - Phân phối</h4><textarea id="db-pc-pp" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-blue-600 uppercase mb-3 tracking-widest">Bài giảng</h4><textarea id="db-bai-giang" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-blue-600 uppercase mb-3 tracking-widest">Giáo án</h4><textarea id="db-giao-an" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-blue-600 uppercase mb-3 tracking-widest">Đề kiểm tra</h4><textarea id="db-de-kt" placeholder="Nhập nội dung..."></textarea></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card p-8 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-blue-600 uppercase mb-4 tracking-widest">Phân công - Phân phối</h4>
+                    <textarea id="db-pc-pp" placeholder="Nhập nội dung..."></textarea>
+                </div>
+                <div class="glass-card p-8 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-blue-600 uppercase mb-4 tracking-widest">Bài giảng</h4>
+                    <textarea id="db-bai-giang" placeholder="Nhập nội dung..."></textarea>
+                </div>
+                <div class="glass-card p-8 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-blue-600 uppercase mb-4 tracking-widest">Giáo án</h4>
+                    <textarea id="db-giao-an" placeholder="Nhập nội dung..."></textarea>
+                </div>
+                <div class="glass-card p-8 shadow-sm">
+                    <h4 class="text-[10px] font-bold text-blue-600 uppercase mb-4 tracking-widest">Đề kiểm tra</h4>
+                    <textarea id="db-de-kt" placeholder="Nhập nội dung..."></textarea>
+                </div>
             </div>
         </div>
 
-        <div id="page-chu-nhiem" class="page-content space-y-6">
+        <div id="page-chu-nhiem" class="page-content space-y-8">
             <h2 class="text-2xl font-bold px-2 flex items-center"><i data-lucide="users" class="mr-3 text-orange-600"></i> Công tác Chủ nhiệm</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-orange-600 uppercase mb-3 tracking-widest">Danh sách học sinh</h4><textarea id="db-ds-hs" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-orange-600 uppercase mb-3 tracking-widest">Kế hoạch</h4><textarea id="db-kh-cn" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-orange-600 uppercase mb-3 tracking-widest">Sơ đồ chỗ ngồi</h4><textarea id="db-sd-cn" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-orange-600 uppercase mb-3 tracking-widest">Hồ sơ học sinh</h4><textarea id="db-hs-hs" placeholder="Nhập nội dung..."></textarea></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card p-8"><h4 class="text-[10px] font-bold text-orange-600 uppercase mb-4 tracking-widest">Danh sách học sinh</h4><textarea id="db-ds-hs"></textarea></div>
+                <div class="glass-card p-8"><h4 class="text-[10px] font-bold text-orange-600 uppercase mb-4 tracking-widest">Sơ đồ chỗ ngồi</h4><textarea id="db-sd-cn"></textarea></div>
+                <div class="glass-card p-8"><h4 class="text-[10px] font-bold text-orange-600 uppercase mb-4 tracking-widest">Kế hoạch</h4><textarea id="db-kh-cn"></textarea></div>
+                <div class="glass-card p-8"><h4 class="text-[10px] font-bold text-orange-600 uppercase mb-4 tracking-widest">Hồ sơ học sinh</h4><textarea id="db-hs-hs"></textarea></div>
             </div>
         </div>
 
-        <div id="page-ca-nhan" class="page-content space-y-6">
+        <div id="page-ca-nhan" class="page-content space-y-8">
             <h2 class="text-2xl font-bold px-2 flex items-center"><i data-lucide="user-circle" class="mr-3 text-emerald-600"></i> Hồ sơ Cá nhân</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-emerald-600 uppercase mb-3 tracking-widest">Văn bằng chứng chỉ</h4><textarea id="db-vb-cc" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-emerald-600 uppercase mb-3 tracking-widest">Quyết định</h4><textarea id="db-qd" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-emerald-600 uppercase mb-3 tracking-widest">Bảng lương</h4><textarea id="db-bl" placeholder="Nhập nội dung..."></textarea></div>
-                <div class="card-custom"><h4 class="text-[10px] font-bold text-emerald-600 uppercase mb-3 tracking-widest">Phân công</h4><textarea id="db-pc-ct" placeholder="Nhập nội dung..."></textarea></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card p-8"><h4 class="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-widest">Văn bằng</h4><textarea id="db-vb-cc"></textarea></div>
+                <div class="glass-card p-8"><h4 class="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-widest">Quyết định</h4><textarea id="db-qd"></textarea></div>
             </div>
         </div>
 
-        <div id="page-dang" class="page-content space-y-6">
-            <h2 class="text-2xl font-bold px-2 flex items-center text-red-600"><i data-lucide="shield-check" class="mr-3"></i> Công tác Đảng - Đoàn</h2>
-            <div class="card-custom border-t-4 border-t-red-500">
-                <textarea id="db-dang-doan" class="min-h-[500px]" placeholder="Nội dung sinh hoạt Đảng, Đoàn..."></textarea>
+        <div id="page-dang" class="page-content space-y-8">
+            <h2 class="text-2xl font-bold px-2 text-red-600"><i data-lucide="shield-check" class="mr-3"></i> Công tác Đảng - Đoàn</h2>
+            <div class="glass-card p-10 border-t-8 border-t-red-500 shadow-xl">
+                <textarea id="db-dang-doan" class="min-h-[500px]" placeholder="Nội dung sinh hoạt..."></textarea>
             </div>
         </div>
 
     </main>
 
-    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-slate-100 px-6 py-4 flex justify-between items-center z-50 shadow-lg">
-        <button onclick="showPage('home')" class="nav-bottom-item active flex flex-col items-center space-y-1" id="nav-home"><i data-lucide="home" size="22"></i><span class="text-[9px] font-bold uppercase tracking-wider">Trang chủ</span></button>
-        <button onclick="showPage('page-chuyen-mon')" class="nav-bottom-item flex flex-col items-center space-y-1" id="nav-chuyen-mon"><i data-lucide="compass" size="22"></i><span class="text-[9px] font-bold uppercase tracking-wider">Khám phá</span></button>
-        <button onclick="handleSave()" id="save-btn" class="w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-xl shadow-blue-200 -mt-12 border-4 border-white transition-all active:scale-90"><i data-lucide="plus" size="28"></i></button>
-        <button onclick="showPage('page-chu-nhiem')" class="nav-bottom-item flex flex-col items-center space-y-1" id="nav-chu-nhiem"><i data-lucide="clipboard-list" size="22"></i><span class="text-[9px] font-bold uppercase tracking-wider">Đơn hàng</span></button>
-        <button onclick="showPage('page-ca-nhan')" class="nav-bottom-item flex flex-col items-center space-y-1" id="nav-ca-nhan"><i data-lucide="user" size="22"></i><span class="text-[9px] font-bold uppercase tracking-wider">Tài khoản</span></button>
+    <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-2xl border-t border-slate-100 px-8 py-5 flex justify-between items-center z-50">
+        <button onclick="showPage('home')" class="nav-item active flex flex-col items-center space-y-1 transition-all" id="nav-home">
+            <i data-lucide="home" size="24"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Trang chủ</span>
+        </button>
+        <button onclick="showPage('page-chuyen-mon')" class="nav-item flex flex-col items-center space-y-1 transition-all" id="nav-chuyen-mon">
+            <i data-lucide="compass" size="24"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Khám phá</span>
+        </button>
+        <button onclick="handleSave()" id="save-btn" class="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl shadow-blue-300 -mt-14 border-4 border-white transition-all active:scale-90 active:rotate-45">
+            <i data-lucide="plus" size="32"></i>
+        </button>
+        <button onclick="showPage('page-chu-nhiem')" class="nav-item flex flex-col items-center space-y-1 transition-all" id="nav-chu-nhiem">
+            <i data-lucide="clipboard-list" size="24"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Hồ sơ</span>
+        </button>
+        <button onclick="showPage('page-ca-nhan')" class="nav-item flex flex-col items-center space-y-1 transition-all" id="nav-ca-nhan">
+            <i data-lucide="user" size="24"></i>
+            <span class="text-[9px] font-bold uppercase tracking-widest">Tôi</span>
+        </button>
     </nav>
 
     <script type="module">
@@ -127,47 +155,48 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Hiển thị ngày tháng
-        const now = new Date();
-        const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
-        document.getElementById('current-date-banner').innerText = `${days[now.getDay()]}, Ngày ${now.getDate()} Tháng ${now.getMonth() + 1} Năm ${now.getFullYear()}`;
+        // Hiển thị ngày tháng thực tế
+        const updateTime = () => {
+            const now = new Date();
+            const days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
+            document.getElementById('date-now').innerText = `${days[now.getDay()]}, ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+        }
 
         window.showPage = (id) => {
             document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            document.getElementById('top-search').style.display = (id === 'home') ? 'block' : 'none';
-            document.querySelectorAll('.nav-bottom-item').forEach(i => i.classList.remove('active'));
-            // Logic mapping nav highlight đơn giản
+            
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            // Cập nhật trạng thái nav active
             if(id === 'home') document.getElementById('nav-home').classList.add('active');
-            window.scrollTo(0,0);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
         window.handleSave = async () => {
             const btn = document.getElementById('save-btn');
-            btn.innerHTML = '<i data-lucide="refresh-cw" class="animate-spin" size="24"></i>';
-            lucide.createIcons();
+            btn.classList.add('animate-spin');
             
             const data = {
                 chuyenMon: { pc: document.getElementById('db-pc-pp').value, bg: document.getElementById('db-bai-giang').value, ga: document.getElementById('db-giao-an').value, de: document.getElementById('db-de-kt').value },
                 chuNhiem: { ds: document.getElementById('db-ds-hs').value, kh: document.getElementById('db-kh-cn').value, sd: document.getElementById('db-sd-cn').value, hs: document.getElementById('db-hs-hs').value },
-                caNhan: { vb: document.getElementById('db-vb-cc').value, qd: document.getElementById('db-qd').value, bl: document.getElementById('db-bl').value, pc: document.getElementById('db-pc-ct').value },
-                dang: document.getElementById('db-dang-doan').value
+                caNhan: { vb: document.getElementById('db-vb-cc').value, qd: document.getElementById('db-qd').value },
+                dang: document.getElementById('db-dang-doan').value,
+                time: new Date().toISOString()
             };
 
             try {
-                await setDoc(doc(db, "teacher_data", "current_work"), data);
-                alert("Đã đồng bộ dữ liệu!");
+                await setDoc(doc(db, "teacher_pro", "workdata"), data);
+                alert("Đã sao lưu dữ liệu thành công!");
             } catch (e) { alert("Lỗi kết nối!"); }
-            btn.innerHTML = '<i data-lucide="plus" size="28"></i>';
-            lucide.createIcons();
+            btn.classList.remove('animate-spin');
         };
 
         window.loadData = async () => {
-            const snap = await getDoc(doc(db, "teacher_data", "current_work"));
+            const snap = await getDoc(doc(db, "teacher_pro", "workdata"));
             if (snap.exists()) {
                 const d = snap.data();
-                if(d.chuyenMon) { 
-                    document.getElementById('db-pc-pp').value = d.chuyenMon.pc || ''; 
+                if(d.chuyenMon) {
+                    document.getElementById('db-pc-pp').value = d.chuyenMon.pc || '';
                     document.getElementById('db-bai-giang').value = d.chuyenMon.bg || '';
                     document.getElementById('db-giao-an').value = d.chuyenMon.ga || '';
                     document.getElementById('db-de-kt').value = d.chuyenMon.de || '';
@@ -181,14 +210,12 @@
                 if(d.caNhan) {
                     document.getElementById('db-vb-cc').value = d.caNhan.vb || '';
                     document.getElementById('db-qd').value = d.caNhan.qd || '';
-                    document.getElementById('db-bl').value = d.caNhan.bl || '';
-                    document.getElementById('db-pc-ct').value = d.caNhan.pc || '';
                 }
                 document.getElementById('db-dang-doan').value = d.dang || '';
             }
         };
 
-        window.onload = () => { loadData(); lucide.createIcons(); };
+        window.onload = () => { updateTime(); loadData(); lucide.createIcons(); };
     </script>
 </body>
 </html>
