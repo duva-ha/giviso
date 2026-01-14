@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GiViSo - Google Drive View</title>
+    <title>Giviso - Timeline & Storage</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; color: #1a1a1a; }
+        body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; color: #1a1a1a; margin: 0; }
         .glass-header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); }
         .loader { border: 2px solid #f3f3f3; border-top: 2px solid #3b82f6; border-radius: 50%; width: 14px; height: 14px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -131,6 +131,7 @@
 
                     setText("");
                     setFile(null);
+                    if (fileInputRef.current) fileInputRef.current.value = "";
                 } catch (err) {
                     alert("Lỗi: " + err.message);
                 } finally {
@@ -149,7 +150,7 @@
                     <header className="flex items-center justify-between mb-12">
                         <div className="flex items-center gap-4">
                             <img src={user.photoURL} className="w-12 h-12 rounded-full border-2 border-white shadow-md" />
-                            <h1 className="font-extrabold text-xl">Timeline Cloud</h1>
+                            <h1 className="font-extrabold text-xl text-gray-900">Giviso Timeline</h1>
                         </div>
                         <button onClick={() => auth.signOut()} className="text-[10px] font-bold text-gray-400 uppercase">Đăng xuất</button>
                     </header>
@@ -176,7 +177,6 @@
                                                 </div>
                                                 <p className="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">{note.content}</p>
                                                 
-                                                {/* HIỂN THỊ FILE & XEM TRƯỚC */}
                                                 {note.fileUrl && (
                                                     <div className="mt-4 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 animate-in">
                                                         {note.fileType?.startsWith('image/') ? (
@@ -201,13 +201,7 @@
                                                         )}
                                                         
                                                         <div className="p-3 bg-white border-t border-gray-50 flex justify-end">
-                                                            <a 
-                                                                href={note.fileUrl} 
-                                                                target="_blank" 
-                                                                className="text-[10px] font-extrabold text-blue-600 px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-all"
-                                                            >
-                                                                Tải xuống
-                                                            </a>
+                                                            <a href={note.fileUrl} target="_blank" className="text-[10px] font-extrabold text-blue-600 px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-all">Tải xuống</a>
                                                         </div>
                                                     </div>
                                                 )}
@@ -233,12 +227,12 @@
                                 ))}
                             </div>
                             <form onSubmit={handleSubmit} className="bg-white shadow-2xl rounded-[2.5rem] p-2 border border-gray-100">
-                                <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={uploading ? "Đang tải tệp lên Drive..." : "Nhập nội dung..."} className="w-full p-5 outline-none resize-none text-sm h-28 bg-transparent" disabled={uploading} />
+                                <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={uploading ? "Đang tải tệp..." : "Nhập nội dung..."} className="w-full p-5 outline-none resize-none text-sm h-28 bg-transparent" disabled={uploading} />
                                 <div className="flex items-center justify-between p-2">
                                     <input type="file" className="hidden" ref={fileInputRef} onChange={(e) => setFile(e.target.files[0])} />
                                     <button type="button" onClick={() => fileInputRef.current.click()} className="p-3 text-gray-400 hover:text-blue-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg></button>
                                     <button disabled={uploading || (!text.trim() && !file)} className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-all ${uploading || (!text.trim() && !file) ? 'bg-gray-200' : 'bg-blue-600'}`}>
-                                        {uploading ? <div className="loader"></div> : <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>}
+                                        {uploading ? <div className="loader"></div> : <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 00-.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>}
                                     </button>
                                 </div>
                             </form>
@@ -248,7 +242,8 @@
             );
         }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
