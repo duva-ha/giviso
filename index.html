@@ -3,69 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartTeacher - Giviso Edition</title>
+    <title>GiViSo - Google Drive View</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
-        body { font-family: sans-serif; background-color: #fcfdfe; }
-        .page-content { display: none; padding-bottom: 120px; }
-        .page-content.active { display: block; }
-        .glass-card { background: white; border: 1px solid #f1f5f9; border-radius: 2.5rem; }
-        .file-item { display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 12px; border-radius: 16px; margin-top: 8px; border: 1px solid #f1f5f9; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #fcfcfd; color: #1a1a1a; }
+        .glass-header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); }
+        .loader { border: 2px solid #f3f3f3; border-top: 2px solid #3b82f6; border-radius: 50%; width: 14px; height: 14px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
-<body class="text-slate-900">
-    <main class="max-w-6xl mx-auto pt-20 px-6">
-        <div id="home" class="page-content active space-y-10 text-center">
-            <h1 class="text-2xl font-bold text-blue-600">HỆ THỐNG GIVISO</h1>
-            <div id="file-list" class="max-w-md mx-auto space-y-2"></div>
-        </div>
-    </main>
+<body>
+    <div id="root"></div>
 
-    <button onclick="document.getElementById('file-in').click()" class="fixed bottom-10 left-1/2 -translate-x-1/2 w-16 h-16 bg-blue-600 text-white rounded-full shadow-2xl text-3xl font-bold">+</button>
-    <input type="file" id="file-in" class="hidden">
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
 
         const firebaseConfig = {
-            apiKey: "AIzaSyBGNOpqBT1Zm48QiysdKgG-y_rHWDlz28g",
-            authDomain: "giviso.firebaseapp.com",
-            projectId: "giviso",
-            storageBucket: "giviso.firebasestorage.app",
-            messagingSenderId: "738030109462",
-            appId: "1:738030109462:web:5352db48482baf666a4637",
-            measurementId: "G-TVTYZC5X6Z"
+            apiKey: "AIzaSyAV-XVaOyUiq1c-29VTaWjLKcEXrssnnTE",
+            authDomain: "qlhs10a7.firebaseapp.com",
+            projectId: "qlhs10a7",
+            storageBucket: "qlhs10a7.firebasestorage.app",
+            messagingSenderId: "584229565603",
+            appId: "1:584229565603:web:d47a10f0a512a1a309bb16"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const storage = getStorage(app);
+        const LABELS = [
+            { id: 'Đảng', bg: 'bg-red-50', text: 'text-red-600' },
+            { id: 'Chuyên môn', bg: 'bg-blue-50', text: 'text-blue-600' },
+            { id: 'Gia đình', bg: 'bg-pink-50', text: 'text-pink-600' },
+            { id: 'Cá nhân', bg: 'bg-emerald-50', text: 'text-emerald-600' }
+        ];
 
-        document.getElementById('file-in').onchange = async (e) => {
-            const file = e.target.files[0]; if(!file) return;
-            try {
-                const path = `uploads/${Date.now()}_${file.name}`;
-                const sRef = ref(storage, path);
-                await uploadBytes(sRef, file);
-                const url = await getDownloadURL(sRef);
-                await setDoc(doc(db, "data", "files"), { list: arrayUnion({ name: file.name, url: url, path: path }) }, { merge: true });
-                load();
-            } catch(err) { alert("Lỗi! Kiểm tra Rules và CORS."); }
-        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
 
-        async function load() {
-            const snap = await getDoc(doc(db, "data", "files"));
-            const div = document.getElementById('file-list'); div.innerHTML = '';
-            if(snap.exists() && snap.data().list) {
-                snap.data().list.reverse().forEach(f => {
-                    div.innerHTML += `<div class="file-item"><span>${f.name}</span><button onclick="window.open('${f.url}')" class="text-blue-500 font-bold">Xem</button></div>`;
-                });
-            }
+        function App() {
+            const [user, setUser] = useState(null);
+            const [notes, setNotes] = useState([]);
+            const [text, setText] = useState("");
+            const [file, setFile] = useState(null);
+            const [uploading, setUploading] = useState(false);
+            const [activeLabel, setActiveLabel] = useState("Cá nhân");
+            const fileInputRef = useRef(null);
+
+            const scriptURL = "https://script.google.com/macros/s/AKfycbxddSRc8zNGV3Qco8qmRC4bkERse1c38WkZrtcZLx39FPr7hmiyzbN4ucZ5wYINDFEw/exec";
+
+            useEffect(() => {
+                return auth.onAuthStateChanged((u) => setUser(u));
+            }, []);
+
+            useEffect(() => {
+                if (!user) return;
+                return db.collection("notes").where("userId", "==", user.uid)
+                    .onSnapshot((s) => {
+                        const data = s.docs.map(d => ({ id: d.id, ...d.data() }));
+                        setNotes(data.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)));
+                    });
+            }, [user]);
+
+            const groupedNotes = useMemo(() => {
+                return notes.reduce((groups, note) => {
+                    const d = note.displayDate || "Khác";
+                    if (!groups[d]) groups[d] = [];
+                    groups[d].push(note);
+                    return groups;
+                }, {});
+            }, [notes]);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if ((!text.trim() && !file) || !user) return;
+                setUploading(true);
+
+                let fileUrl = null;
+                let fileName = null;
+                let fileType = null;
+
+                try {
+                    if (file) {
+                        const base64 = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result.split(',')[1]);
+                            reader.readAsDataURL(file);
+                        });
+
+                        const response = await fetch(scriptURL, {
+                            method: "POST",
+                            body: JSON.stringify({
+                                base64: base64,
+                                contentType: file.type,
+                                fileName: file.name
+                            })
+                        });
+                        
+                        const result = await response.json();
+                        if (result.error) throw new Error(result.error);
+                        fileUrl = result.url;
+                        fileName = result.name;
+                        fileType = file.type;
+                    }
+
+                    const now = new Date();
+                    const vnDate = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+
+                    await db.collection("notes").add({
+                        content: text,
+                        userId: user.uid,
+                        label: activeLabel,
+                        displayDate: vnDate,
+                        fileUrl: fileUrl,
+                        fileName: fileName,
+                        fileType: fileType,
+                        time: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    setText("");
+                    setFile(null);
+                } catch (err) {
+                    alert("Lỗi: " + err.message);
+                } finally {
+                    setUploading(false);
+                }
+            };
+
+            if (!user) return (
+                <div className="h-screen flex items-center justify-center bg-white">
+                    <button onClick={() => auth.signInWithPopup(provider)} className="px-8 py-4 bg-black text-white rounded-2xl font-semibold shadow-xl">Đăng nhập bằng Google</button>
+                </div>
+            );
+
+            return (
+                <div className="max-w-3xl mx-auto min-h-screen p-6 pb-64">
+                    <header className="flex items-center justify-between mb-12">
+                        <div className="flex items-center gap-4">
+                            <img src={user.photoURL} className="w-12 h-12 rounded-full border-2 border-white shadow-md" />
+                            <h1 className="font-extrabold text-xl">Timeline Cloud</h1>
+                        </div>
+                        <button onClick={() => auth.signOut()} className="text-[10px] font-bold text-gray-400 uppercase">Đăng xuất</button>
+                    </header>
+
+                    <div className="space-y-12">
+                        {Object.keys(groupedNotes).map(date => (
+                            <div key={date}>
+                                <div className="text-center mb-6">
+                                    <span className="text-[11px] font-extrabold text-gray-400 bg-gray-50 px-4 py-2 rounded-full uppercase tracking-widest">{date}</span>
+                                </div>
+                                <div className="space-y-6">
+                                    {groupedNotes[date].map(note => {
+                                        const labelInfo = LABELS.find(l => l.id === note.label) || LABELS[3];
+                                        return (
+                                            <div key={note.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-50 group animate-in">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[10px] font-bold text-gray-300">{note.time}</span>
+                                                        <span className={`px-3 py-1 rounded-full text-[9px] font-extrabold uppercase ${labelInfo.bg} ${labelInfo.text}`}>{note.label}</span>
+                                                    </div>
+                                                    <button onClick={() => confirm('Xóa?') && db.collection("notes").doc(note.id).delete()} className="opacity-0 group-hover:opacity-100 text-gray-200 hover:text-red-500 transition-all">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>
+                                                    </button>
+                                                </div>
+                                                <p className="text-gray-800 whitespace-pre-wrap text-sm leading-relaxed">{note.content}</p>
+                                                
+                                                {/* HIỂN THỊ FILE & XEM TRƯỚC */}
+                                                {note.fileUrl && (
+                                                    <div className="mt-4 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 animate-in">
+                                                        {note.fileType?.startsWith('image/') ? (
+                                                            <a href={note.fileUrl} target="_blank" rel="noreferrer">
+                                                                <img src={note.fileUrl} className="w-full h-auto max-h-96 object-cover hover:opacity-95 transition-opacity" />
+                                                            </a>
+                                                        ) : note.fileType === 'application/pdf' ? (
+                                                            <div className="w-full h-96 border-b border-gray-100">
+                                                                <iframe 
+                                                                    src={note.fileUrl.replace('export=view', 'preview')} 
+                                                                    className="w-full h-full" 
+                                                                    frameBorder="0"
+                                                                ></iframe>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="p-4 flex items-center gap-3">
+                                                                <div className="bg-white p-2 rounded-lg shadow-sm text-gray-400">
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                                                </div>
+                                                                <span className="text-[11px] font-bold text-gray-600 truncate flex-1">{note.fileName}</span>
+                                                            </div>
+                                                        )}
+                                                        
+                                                        <div className="p-3 bg-white border-t border-gray-50 flex justify-end">
+                                                            <a 
+                                                                href={note.fileUrl} 
+                                                                target="_blank" 
+                                                                className="text-[10px] font-extrabold text-blue-600 px-4 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 transition-all"
+                                                            >
+                                                                Tải xuống
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="fixed bottom-0 left-0 right-0 p-6 glass-header border-t border-gray-100">
+                        <div className="max-w-2xl mx-auto space-y-4">
+                            {file && (
+                                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-2xl animate-in border border-blue-100 shadow-sm">
+                                    <span className="text-xs font-bold text-blue-700 truncate flex-1 px-2">{file.name}</span>
+                                    <button onClick={() => setFile(null)} className="text-blue-500 p-1"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg></button>
+                                </div>
+                            )}
+                            <div className="flex gap-2 justify-center">
+                                {LABELS.map(l => (
+                                    <button key={l.id} onClick={() => setActiveLabel(l.id)} className={`px-5 py-2 rounded-full text-[10px] font-bold transition-all ${activeLabel === l.id ? 'bg-black text-white shadow-lg' : 'bg-white text-gray-400 border border-gray-100'}`}>{l.id}</button>
+                                ))}
+                            </div>
+                            <form onSubmit={handleSubmit} className="bg-white shadow-2xl rounded-[2.5rem] p-2 border border-gray-100">
+                                <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={uploading ? "Đang tải tệp lên Drive..." : "Nhập nội dung..."} className="w-full p-5 outline-none resize-none text-sm h-28 bg-transparent" disabled={uploading} />
+                                <div className="flex items-center justify-between p-2">
+                                    <input type="file" className="hidden" ref={fileInputRef} onChange={(e) => setFile(e.target.files[0])} />
+                                    <button type="button" onClick={() => fileInputRef.current.click()} className="p-3 text-gray-400 hover:text-blue-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg></button>
+                                    <button disabled={uploading || (!text.trim() && !file)} className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-all ${uploading || (!text.trim() && !file) ? 'bg-gray-200' : 'bg-blue-600'}`}>
+                                        {uploading ? <div className="loader"></div> : <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
         }
-        load();
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
 </html>
