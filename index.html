@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-TECH Hub 2026</title>
+    <title>Giviso Teacher App - Smart Date Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -13,21 +13,21 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; margin: 0; overflow: hidden; }
-        .sidebar-active { background: #0ea5e9; color: white; box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3); }
-        .lesson-item { border-radius: 12px; transition: all 0.2s; cursor: pointer; border: 1px solid transparent; }
-        .lesson-item.active { background: #e0f2fe; border-color: #0ea5e9; color: #0369a1; font-weight: 700; }
-        .modal-overlay { background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); }
-        .neo-card { background: white; border-radius: 1.5rem; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
-        .timer-flash { animation: pulse 1s infinite; color: #ef4444; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; }
+        .sidebar-active { background: #2563eb; color: white; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
+        .glass-blur { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border-top: 1px solid #f1f5f9; }
+        .neo-card { background: white; border-radius: 2rem; border: 1px solid #f1f5f9; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .neo-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05); }
+        .loader { border: 2px solid #f3f3f3; border-top: 2px solid #2563eb; border-radius: 50%; width: 16px; height: 16px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .modal-overlay { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
         const firebaseConfig = {
             apiKey: "AIzaSyAV-XVaOyUiq1c-29VTaWjLKcEXrssnnTE",
@@ -38,149 +38,233 @@
             appId: "1:584229565603:web:d47a10f0a512a1a309bb16"
         };
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-
-        const DATA = {
-            "12": [
-                { id: "12-1", title: "Bài 1: Khái quát về hệ thống điện", content: "Môn Công nghệ lớp 12 đòi hỏi sự kết hợp giữa lý thuyết và thực hành..." },
-                { id: "12-2", title: "Bài 2: Máy điện ba pha", content: "Khám phá nguyên lý hoạt động của các máy điện ba pha thông dụng..." }
-            ],
-            "11": [{ id: "11-1", title: "Bài 1: Cơ khí chế tạo", content: "Tìm hiểu vai trò của ngành cơ khí trong đời sống..." }],
-            "10": [{ id: "10-1", title: "Bài 1: Khái quát về công nghệ", content: "Khám phá mối quan hệ giữa khoa học, kỹ thuật và công nghệ..." }]
-        };
-
-        const QUIZZES = [
-            {
-                id: "q1", title: "Kiểm tra nhanh - 5 phút", time: 300,
-                questions: [
-                    { q: "Linh kiện nào dùng để khuếch đại?", a: ["Điện trở", "Tụ điện", "Transistor", "Diode"], correct: 2 },
-                    { q: "Đơn vị của tụ điện là gì?", a: ["Ohm", "Farad", "Volt", "Ampe"], correct: 1 }
-                ]
-            }
+        const MENU_ITEMS = [
+            { id: 'timeline', name: 'Dòng thời gian', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', color: 'bg-slate-500' },
+            { id: 'giaoan', name: 'Giáo án', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', color: 'bg-blue-600' },
+            { id: 'baigiang', name: 'Bài giảng', icon: 'M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z', color: 'bg-indigo-600' },
+            { id: 'dekiemtra', name: 'Đề kiểm tra', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', color: 'bg-rose-600' },
+            { id: 'hosocanhan', name: 'Hồ sơ cá nhân', icon: 'M10 6a2 2 0 114 0 2 2 0 01-4 0zM14.5 10.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM12 13.5c-3.33 0-6 1.67-6 5V20h12v-1.5c0-3.33-2.67-5-6-5z', color: 'bg-emerald-600' }
         ];
 
-        function QuizModal({ quiz, onClose }) {
-            const [sec, setSec] = useState(quiz.time);
-            const [ans, setAns] = useState({});
-            const [done, setDone] = useState(null);
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const provider = new firebase.auth.GoogleAuthProvider();
+
+        function App() {
+            const [user, setUser] = useState(null);
+            const [notes, setNotes] = useState([]);
+            const [text, setText] = useState("");
+            const [file, setFile] = useState(null);
+            const [uploading, setUploading] = useState(false);
+            const [activeMenu, setActiveMenu] = useState('timeline');
+            const [searchTerm, setSearchTerm] = useState("");
+            const [selectedFile, setSelectedFile] = useState(null);
+            const fileInputRef = useRef(null);
+
+            const scriptURL = "https://script.google.com/macros/s/AKfycbxddSRc8zNGV3Qco8qmRC4bkERse1c38WkZrtcZLx39FPr7hmiyzbN4ucZ5wYINDFEw/exec";
 
             useEffect(() => {
-                if (sec <= 0) { finish(); return; }
-                const t = setInterval(() => setSec(s => s - 1), 1000);
-                return () => clearInterval(t);
-            }, [sec]);
+                return auth.onAuthStateChanged((u) => setUser(u));
+            }, []);
 
-            const finish = () => {
-                let s = 0;
-                quiz.questions.forEach((q, i) => { if (ans[i] === q.correct) s++; });
-                setDone(s);
+            useEffect(() => {
+                if (!user) return;
+                return db.collection("notes").where("userId", "==", user.uid)
+                    .onSnapshot((s) => {
+                        const data = s.docs.map(d => ({ id: d.id, ...d.data() }));
+                        setNotes(data.sort((a, b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)));
+                    });
+            }, [user]);
+
+            // TÍCH HỢP TÌM KIẾM THEO NGÀY
+            const displayNotes = useMemo(() => {
+                let result = notes;
+                if (activeMenu !== 'timeline') result = result.filter(n => n.category === activeMenu);
+                if (searchTerm.trim()) {
+                    const s = searchTerm.toLowerCase();
+                    result = result.filter(n => 
+                        (n.content || "").toLowerCase().includes(s) || 
+                        (n.fileName || "").toLowerCase().includes(s) ||
+                        (n.displayDate || "").includes(s) // Tìm kiếm theo ngày dd-mm-yyyy
+                    );
+                }
+                return result;
+            }, [notes, activeMenu, searchTerm]);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if ((!text.trim() && !file) || !user) return;
+                setUploading(true);
+                let fileUrl = null, fileName = null, fileType = null;
+                try {
+                    if (file) {
+                        const base64 = await new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result.split(',')[1]);
+                            reader.readAsDataURL(file);
+                        });
+                        const response = await fetch(scriptURL, {
+                            method: "POST",
+                            body: JSON.stringify({ base64, contentType: file.type, fileName: file.name })
+                        });
+                        const result = await response.json();
+                        fileUrl = result.url; fileName = file.name; fileType = file.type;
+                    }
+                    const now = new Date();
+                    const vnDate = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+                    const saveCategory = activeMenu === 'timeline' ? 'giaoan' : activeMenu;
+
+                    await db.collection("notes").add({
+                        content: text, userId: user.uid, category: saveCategory,
+                        displayDate: vnDate, fileUrl, fileName, fileType,
+                        time: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    setText(""); setFile(null);
+                } catch (err) { alert("Lỗi: " + err.message); } finally { setUploading(false); }
             };
 
+            const formatDriveUrl = (url) => {
+                const idMatch = url?.match(/id=([^&]+)/);
+                return idMatch ? `https://drive.google.com/file/d/${idMatch[1]}/preview` : url;
+            };
+
+            if (!user) return (
+                <div className="h-screen flex flex-col items-center justify-center bg-slate-900 text-white">
+                    <h1 className="text-4xl font-black mb-8 tracking-tighter animate-pulse">GIVISO TEACHER</h1>
+                    <button onClick={() => auth.signInWithPopup(provider)} className="px-10 py-4 bg-white text-slate-900 rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all">Bắt đầu quản lý</button>
+                </div>
+            );
+
             return (
-                <div className="fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-xl rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl">
-                        <div className="p-6 border-b bg-slate-50 flex justify-between items-center">
-                            <h3 className="font-bold">{quiz.title}</h3>
-                            {!done && <div className={`text-xl font-black ${sec < 60 ? 'timer-flash' : 'text-sky-600'}`}>{Math.floor(sec/60)}:{(sec%60).toString().padStart(2,'0')}</div>}
+                <div className="flex min-h-screen">
+                    {/* SIDEBAR */}
+                    <aside className="w-72 bg-white border-r border-slate-200 fixed h-full z-40 hidden lg:block p-8">
+                        <div className="flex items-center gap-3 mb-12">
+                            <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl">G</div>
+                            <h2 className="font-extrabold text-xl">Giviso Pro</h2>
                         </div>
-                        <div className="p-8 flex-1 overflow-y-auto max-h-[70vh]">
-                            {done === null ? (
-                                quiz.questions.map((q, i) => (
-                                    <div key={i} className="mb-6">
-                                        <p className="font-bold mb-3">{i+1}. {q.q}</p>
-                                        <div className="grid gap-2">
-                                            {q.a.map((o, oi) => (
-                                                <button key={oi} onClick={() => setAns({...ans, [i]: oi})} className={`text-left p-3 rounded-xl border-2 transition-all ${ans[i] === oi ? 'border-sky-500 bg-sky-50' : 'border-slate-100'}`}>{o}</button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))
-                            ) : (
-                                <div className="text-center py-6">
-                                    <div className="text-5xl mb-4">🎯</div>
-                                    <h2 className="text-2xl font-black mb-1">Kết quả: {done}/{quiz.questions.length}</h2>
-                                    <p className="text-slate-400 font-bold mb-6">Điểm: {((done/quiz.questions.length)*10).toFixed(1)}</p>
-                                    <button onClick={onClose} className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold">HOÀN TẤT</button>
+                        <nav className="space-y-3">
+                            {MENU_ITEMS.map(item => (
+                                <button 
+                                    key={item.id} 
+                                    onClick={() => setActiveMenu(item.id)}
+                                    className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-sm font-bold transition-all ${activeMenu === item.id ? 'sidebar-active' : 'text-slate-500 hover:bg-slate-50'}`}
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon}/></svg>
+                                    {item.name}
+                                </button>
+                            ))}
+                        </nav>
+                        <div className="absolute bottom-8 left-8 right-8">
+                            <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <img src={user.photoURL} className="w-8 h-8 rounded-full border border-white shadow-sm" />
+                                <div className="overflow-hidden">
+                                    <p className="text-[10px] font-bold text-slate-400 truncate uppercase">{user.displayName}</p>
+                                    <button onClick={() => auth.signOut()} className="text-[9px] font-black text-rose-500 uppercase hover:underline">Đăng xuất</button>
                                 </div>
-                            )}
+                            </div>
                         </div>
-                        {done === null && <div className="p-6 border-t"><button onClick={finish} className="w-full py-4 bg-sky-600 text-white rounded-2xl font-bold uppercase">Nộp bài</button></div>}
+                    </aside>
+
+                    {/* MAIN CONTENT */}
+                    <main className="flex-1 lg:ml-72 min-h-screen p-6 lg:p-12 pb-80">
+                        <header className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                            <div>
+                                <h2 className="text-4xl font-black tracking-tighter text-slate-900">{MENU_ITEMS.find(m => m.id === activeMenu).name}</h2>
+                                <p className="text-slate-400 font-medium mt-2 italic text-sm">Hôm nay là: {new Date().toLocaleDateString('vi-VN')}</p>
+                            </div>
+                            <div className="relative w-full md:w-96 group">
+                                <input 
+                                    type="text" 
+                                    placeholder="Tìm tên file, nội dung hoặc ngày (vd: 14-01)..." 
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full bg-white border border-slate-200 rounded-[1.5rem] py-4 pl-12 pr-6 outline-none focus:ring-4 ring-blue-500/10 transition-all text-sm font-semibold shadow-sm"
+                                />
+                                <svg className="w-5 h-5 text-slate-300 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                            </div>
+                        </header>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {displayNotes.map(note => (
+                                <div key={note.id} className="neo-card p-8 flex flex-col justify-between group">
+                                    <div>
+                                        <div className="flex justify-between items-start mb-6">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg uppercase tracking-widest self-start">{note.displayDate}</span>
+                                                <span className="text-[9px] font-bold text-slate-300 uppercase pl-1">{note.time}</span>
+                                            </div>
+                                            <button onClick={() => confirm('Xóa tài liệu này?') && db.collection("notes").doc(note.id).delete()} className="p-2 text-slate-200 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all opacity-0 group-hover:opacity-100">
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </div>
+                                        <p className="text-slate-700 text-[15px] font-semibold leading-relaxed mb-8 whitespace-pre-wrap">{note.content}</p>
+                                    </div>
+                                    
+                                    {note.fileUrl && (
+                                        <div onClick={() => setSelectedFile(note)} className="p-4 bg-slate-50 rounded-[1.5rem] border border-slate-100 flex items-center gap-4 cursor-pointer hover:bg-blue-600 hover:text-white transition-all group/file shadow-inner">
+                                            <div className={`w-12 h-12 bg-white text-blue-600 rounded-2xl flex items-center justify-center shadow-sm group-hover/file:scale-110 transition-transform`}>
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                            </div>
+                                            <div className="flex-1 overflow-hidden">
+                                                <p className="text-[12px] font-black truncate mb-0.5">{note.fileName}</p>
+                                                <span className="text-[9px] font-bold opacity-60 uppercase tracking-tighter">Click để xem nhanh nội dung</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </main>
+
+                    {/* QUICK VIEW MODAL */}
+                    {selectedFile && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay animate-in" onClick={() => setSelectedFile(null)}>
+                            <div className="bg-white w-full max-w-6xl h-[90vh] rounded-[3rem] overflow-hidden shadow-2xl relative flex flex-col" onClick={e => e.stopPropagation()}>
+                                <div className="p-8 border-b flex items-center justify-between">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center font-black">?</div>
+                                        <h3 className="font-black text-sm text-slate-800 tracking-tight">{selectedFile.fileName}</h3>
+                                    </div>
+                                    <button onClick={() => setSelectedFile(null)} className="p-3 hover:bg-slate-100 rounded-full transition-colors text-2xl font-light leading-none">✕</button>
+                                </div>
+                                <div className="flex-1 bg-slate-50 overflow-hidden">
+                                    <iframe src={formatDriveUrl(selectedFile.fileUrl)} className="w-full h-full border-none shadow-inner" title="Preview"></iframe>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* INPUT AREA */}
+                    <div className="fixed bottom-0 lg:left-72 left-0 right-0 p-8 glass-blur z-30">
+                        <div className="max-w-4xl mx-auto">
+                            <form onSubmit={handleSubmit} className="bg-white shadow-2xl rounded-[2.5rem] p-3 border border-slate-200 flex flex-col md:flex-row items-center gap-4">
+                                {file && <div className="px-5 py-2.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black animate-in flex items-center gap-2 shadow-lg shadow-blue-200">📎 {file.name.slice(0, 12)}...</div>}
+                                <textarea 
+                                    value={text} onChange={(e) => setText(e.target.value)} 
+                                    placeholder={uploading ? "Đang xử lý tải lên..." : `Thêm ghi chú vào mục ${MENU_ITEMS.find(m => m.id === (activeMenu === 'timeline' ? 'giaoan' : activeMenu)).name}...`} 
+                                    className="w-full p-4 outline-none resize-none text-[15px] font-bold h-12 bg-transparent custom-scroll" 
+                                    disabled={uploading} 
+                                />
+                                <div className="flex items-center gap-4 pr-3 w-full md:w-auto justify-between md:justify-end">
+                                    <input type="file" className="hidden" ref={fileInputRef} onChange={(e) => setFile(e.target.files[0])} />
+                                    <button type="button" onClick={() => fileInputRef.current.click()} className="p-4 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all">📎</button>
+                                    <button disabled={uploading || (!text.trim() && !file)} className="h-14 w-14 md:h-12 md:w-48 rounded-[1.25rem] flex items-center justify-center text-white font-black text-[11px] bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all active:scale-90">
+                                        {uploading ? <div className="loader"></div> : <span className="hidden md:block uppercase tracking-widest">Lưu tài liệu</span>}
+                                        {!uploading && <span className="md:hidden text-2xl font-normal">➤</span>}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             );
         }
 
-        function App() {
-            const [user, setUser] = useState(null);
-            const [tab, setTab] = useState('baigiang');
-            const [grade, setGrade] = useState('12');
-            const [ls, setLs] = useState(null);
-            const [qz, setQz] = useState(null);
-
-            useEffect(() => {
-                const unsub = auth.onAuthStateChanged(u => setUser(u));
-                return () => unsub();
-            }, []);
-
-            useEffect(() => { setLs(DATA[grade][0]); }, [grade]);
-
-            if (!user) return (
-                <div className="h-screen flex items-center justify-center bg-sky-600">
-                    <button onClick={() => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())} className="bg-white px-10 py-4 rounded-full font-bold shadow-2xl">ĐĂNG NHẬP E-TECH</button>
-                </div>
-            );
-
-            return (
-                <div className="flex h-screen">
-                    <aside className="w-64 bg-white border-r flex flex-col p-6 shadow-sm">
-                        <div className="mb-10 font-black text-xl text-sky-600 italic">E-TECH PRO</div>
-                        <nav className="flex-1 space-y-2 text-sm font-bold">
-                            <button onClick={()=>setTab('baigiang')} className={`w-full flex p-4 rounded-2xl ${tab==='baigiang'?'sidebar-active':'text-slate-400'}`}>📖 Bài học</button>
-                            <button onClick={()=>setTab('luyentap')} className={`w-full flex p-4 rounded-2xl ${tab==='luyentap'?'sidebar-active':'text-slate-400'}`}>📝 Luyện tập</button>
-                            <button onClick={()=>setTab('kiemtra')} className={`w-full flex p-4 rounded-2xl ${tab==='kiemtra'?'sidebar-active':'text-slate-400'}`}>🎯 Kiểm tra</button>
-                        </nav>
-                        <button onClick={()=>auth.signOut()} className="text-[10px] font-bold text-rose-500 uppercase mt-auto">Đăng xuất</button>
-                    </aside>
-
-                    <main className="flex-1 bg-white relative">
-                        {tab === 'baigiang' ? (
-                            <div className="flex h-full">
-                                <div className="w-72 bg-slate-50 border-r p-6">
-                                    <select value={grade} onChange={e=>setGrade(e.target.value)} className="w-full p-3 mb-6 bg-white border rounded-xl font-bold outline-none">
-                                        <option value="12">Lớp 12</option><option value="11">Lớp 11</option><option value="10">Lớp 10</option>
-                                    </select>
-                                    <div className="space-y-2">
-                                        {DATA[grade].map(l => (
-                                            <div key={l.id} onClick={()=>setLs(l)} className={`lesson-item p-4 text-[13px] font-bold ${ls?.id===l.id?'active':'text-slate-500'}`}>{l.title}</div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="flex-1 p-12 overflow-y-auto">
-                                    <h2 className="text-3xl font-black mb-6">{ls?.title}</h2>
-                                    <div className="bg-sky-50 p-8 rounded-[2rem] border border-sky-100 italic leading-relaxed">{ls?.content}</div>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="p-12 bg-slate-50 h-full">
-                                <h2 className="text-3xl font-black mb-10 tracking-tight">Học phần {tab==='luyentap'?'Luyện tập':'Kiểm tra'}</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {QUIZZES.map(q => (
-                                        <div key={q.id} onClick={()=>setQz(q)} className="neo-card p-8 h-56 flex flex-col justify-between cursor-pointer group">
-                                            <div className="text-2xl">📝</div>
-                                            <div><h4 className="font-black group-hover:text-sky-600">{q.title}</h4><p className="text-[10px] text-slate-400 uppercase font-bold">{q.questions.length} câu • {q.time/60} phút</p></div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </main>
-                    {qz && <QuizModal quiz={qz} onClose={()=>setQz(null)} />}
-                </div>
-            );
-        }
-
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
