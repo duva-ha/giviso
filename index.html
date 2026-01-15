@@ -19,6 +19,7 @@
         .custom-scroll::-webkit-scrollbar { width: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .glass-blur { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border-top: 1px solid #e2e8f0; }
+        .preview-card { border-left: 4px solid #3b82f6; }
     </style>
 </head>
 <body>
@@ -47,7 +48,143 @@
             { id: 'baocao', name: 'Báo cáo điểm', icon: 'M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' }
         ];
 
-        // --- COMPONENT BÁO CÁO ĐIỂM ---
+        // --- COMPONENT TẠO ĐỀ KIỂM TRA (NEW) ---
+        function QuizCreator() {
+            const [rawText, setRawText] = useState("");
+            const [isSaving, setIsSaving] = useState(false);
+            const [quizConfig, setQuizConfig] = useState({
+                title: "",
+                time: 15,
+                grade: "12",
+                shuffleQuestions: false,
+                shuffleOptions: false,
+                questions: []
+            });
+
+            // Hàm bóc tách nội dung
+            useEffect(() => {
+                if (!rawText.trim()) {
+                    setQuizConfig(prev => ({ ...prev, questions: [] }));
+                    return;
+                }
+                const parts = rawText.split(/Câu\s*\d+[:.]/g).filter(p => p.trim().length > 5);
+                const parsed = parts.map(part => {
+                    const lines = part.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    const questionText = lines[0];
+                    const options = lines.filter(l => /^[A-D][.:)]/.test(l)).map(l => l.replace(/^[A-D][.:)]\s*/, ""));
+                    
+                    // Tìm đáp án đúng (mặc định A=0 nếu không tìm thấy dấu *)
+                    let correct = 0;
+                    lines.forEach((l, idx) => {
+                        if (l.includes('*')) correct = options.indexOf(l.replace('*', '').replace(/^[A-D][.:)]\s*/, ""));
+                    });
+                    if (correct < 0) correct = 0;
+
+                    return { q: questionText, a: options.length > 0 ? options : ["A", "B", "C", "D"], correct };
+                });
+                setQuizConfig(prev => ({ ...prev, questions: parsed }));
+            }, [rawText]);
+
+            const handlePublish = async () => {
+                if (!quizConfig.title || quizConfig.questions.length === 0) {
+                    alert("Vui lòng nhập tiêu đề và ít nhất 1 câu hỏi!");
+                    return;
+                }
+                setIsSaving(true);
+                try {
+                    await db.collection("quizzes").add({
+                        ...quizConfig,
+                        time: quizConfig.time * 60, // Chuyển sang giây
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    alert("Đã phát đề thành công lên Student Hub!");
+                    setRawText("");
+                    setQuizConfig({ ...quizConfig, title: "", questions: [] });
+                } catch (e) { alert("Lỗi: " + e.message); }
+                finally { setIsSaving(false); }
+            };
+
+            return (
+                <div className="flex h-full gap-8 p-8 overflow-hidden">
+                    {/* CỘT TRÁI: NHẬP ĐỀ */}
+                    <div className="flex-1 flex flex-col gap-4">
+                        <div className="bg-white p-6 rounded-[2rem] border shadow-sm space-y-4">
+                            <input 
+                                className="w-full text-2xl font-black outline-none border-b-2 border-slate-100 focus:border-blue-600 pb-2 transition-all" 
+                                placeholder="Tên bài kiểm tra..." 
+                                value={quizConfig.title}
+                                onChange={e => setQuizConfig({...quizConfig, title: e.target.value})}
+                            />
+                            <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black uppercase text-slate-400">Khối</span>
+                                    <select value={quizConfig.grade} onChange={e => setQuizConfig({...quizConfig, grade: e.target.value})} className="bg-slate-100 px-3 py-1 rounded-lg font-bold text-xs outline-none">
+                                        <option value="12">Lớp 12</option>
+                                        <option value="11">Lớp 11</option>
+                                        <option value="10">Lớp 10</option>
+                                    </select>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black uppercase text-slate-400">Thời gian (Phút)</span>
+                                    <input type="number" value={quizConfig.time} onChange={e => setQuizConfig({...quizConfig, time: parseInt(e.target.value)})} className="w-16 bg-slate-100 px-3 py-1 rounded-lg font-bold text-xs outline-none" />
+                                </div>
+                            </div>
+                            <div className="flex gap-4">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={quizConfig.shuffleQuestions} onChange={e => setQuizConfig({...quizConfig, shuffleQuestions: e.target.checked})} />
+                                    <span className="text-[10px] font-black uppercase text-slate-500">Đảo câu hỏi</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" checked={quizConfig.shuffleOptions} onChange={e => setQuizConfig({...quizConfig, shuffleOptions: e.target.checked})} />
+                                    <span className="text-[10px] font-black uppercase text-slate-500">Đảo đáp án</span>
+                                </label>
+                            </div>
+                        </div>
+                        <textarea 
+                            className="flex-1 w-full p-8 rounded-[2rem] border shadow-inner outline-none focus:ring-4 ring-blue-50 resize-none font-medium text-slate-600 custom-scroll"
+                            placeholder={"Dán đề từ Word vào đây...\nVí dụ:\nCâu 1: Thủ đô Việt Nam là gì?\nA. Hà Nội *\nB. TP.HCM\nC. Đà Nẵng"}
+                            value={rawText}
+                            onChange={e => setRawText(e.target.value)}
+                        />
+                    </div>
+
+                    {/* CỘT PHẢI: PREVIEW */}
+                    <div className="w-[450px] flex flex-col">
+                        <div className="flex-1 bg-slate-50 rounded-[2.5rem] p-8 overflow-y-auto custom-scroll border border-dashed border-slate-300">
+                            <h3 className="text-center font-black text-xs uppercase text-slate-400 mb-6 tracking-widest italic">Bản xem trước ({quizConfig.questions.length} câu)</h3>
+                            {quizConfig.questions.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-slate-300 space-y-4">
+                                    <span className="text-5xl">📄</span>
+                                    <p className="font-bold text-sm uppercase">Đang đợi nội dung đề...</p>
+                                </div>
+                            ) : quizConfig.questions.map((q, i) => (
+                                <div key={i} className="bg-white p-5 rounded-2xl mb-4 shadow-sm border preview-card">
+                                    <p className="font-bold text-slate-800 text-sm mb-3">{i+1}. {q.q}</p>
+                                    <div className="space-y-1">
+                                        {q.a.map((opt, idx) => (
+                                            <div key={idx} className={`text-[10px] p-2 rounded-lg font-bold ${q.correct === idx ? 'bg-emerald-50 text-emerald-600' : 'text-slate-400'}`}>
+                                                {String.fromCharCode(65 + idx)}. {opt}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {quizConfig.questions.length > 0 && (
+                            <button 
+                                onClick={handlePublish}
+                                disabled={isSaving}
+                                className="mt-4 w-full py-5 bg-blue-600 text-white rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl shadow-blue-200 active:scale-95 transition-all disabled:bg-slate-300"
+                            >
+                                {isSaving ? "ĐANG LƯU HỆ THỐNG..." : "PHÁT ĐỀ NGAY"}
+                            </button>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- COMPONENT BÁO CÁO ĐIỂM (GIỮ NGUYÊN) ---
         function GradeReport() {
             const [results, setResults] = useState([]);
             const [loading, setLoading] = useState(true);
@@ -68,7 +205,7 @@
                 return acc;
             }, {});
 
-            if (loading) return <div className="p-20 text-center font-bold text-slate-300">Đang tải bảng điểm...</div>;
+            if (loading) return <div className="p-20 text-center font-bold text-slate-300 italic">Đang tải bảng điểm...</div>;
 
             return (
                 <div className="p-8 overflow-y-auto h-full custom-scroll pb-24">
@@ -88,18 +225,16 @@
                                         <thead className="bg-slate-50 border-b">
                                             <tr>
                                                 <th className="p-4 font-black text-slate-400 uppercase text-[10px]">Học sinh</th>
-                                                <th className="p-4 font-black text-slate-400 uppercase text-[10px] text-center">Đúng/Tổng</th>
                                                 <th className="p-4 font-black text-slate-400 uppercase text-[10px] text-center">Điểm số</th>
-                                                <th className="p-4 font-black text-slate-400 uppercase text-[10px]">Thời gian</th>
+                                                <th className="p-4 font-black text-slate-400 uppercase text-[10px]">Ngày nộp</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
                                             {grouped[title].map(r => (
                                                 <tr key={r.id} className="hover:bg-slate-50 transition-colors">
                                                     <td className="p-4 font-bold text-slate-700">{r.studentName}</td>
-                                                    <td className="p-4 text-center font-medium text-slate-500">{r.correctAnswers}</td>
                                                     <td className="p-4 text-center font-black text-lg text-blue-600">{r.score}</td>
-                                                    <td className="p-4 text-[11px] text-slate-400 font-bold uppercase">{r.date}</td>
+                                                    <td className="p-4 text-[11px] text-slate-400 font-bold uppercase">{r.timestamp?.toDate().toLocaleDateString('vi-VN')}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -112,7 +247,6 @@
             );
         }
 
-        // --- GIAO DIỆN CHÍNH ---
         function App() {
             const [user, setUser] = useState(null);
             const [tab, setTab] = useState('baocao');
@@ -128,8 +262,8 @@
             }, []);
 
             useEffect(() => {
-                if (!user || tab === 'baocao') return;
-                return db.collection("notes").where("userId", "==", user.uid)
+                if (!user || ['baocao', 'dekiemtra'].includes(tab)) return;
+                return db.collection("notes").where("userId", "==", user.uid).where("category", "==", tab)
                     .onSnapshot(s => {
                         const data = s.docs.map(d => ({id: d.id, ...d.data()}));
                         setNotes(data.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)));
@@ -160,7 +294,7 @@
                         displayDate: new Date().toLocaleDateString('vi-VN')
                     });
                     setText(""); setFile(null);
-                } catch (err) { alert("Lỗi tải lên: " + err.message); } 
+                } catch (err) { alert("Lỗi: " + err.message); } 
                 finally { setUploading(false); }
             };
 
@@ -172,7 +306,6 @@
 
             return (
                 <div className="flex h-screen overflow-hidden">
-                    {/* SIDEBAR */}
                     <aside className="w-72 bg-white border-r flex flex-col p-8 z-50 shadow-sm">
                         <div className="mb-12 flex items-center gap-3">
                             <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold shadow-lg">P</div>
@@ -195,9 +328,9 @@
                         </div>
                     </aside>
 
-                    {/* MAIN CONTENT */}
                     <main className="flex-1 bg-white relative overflow-hidden">
-                        {tab === 'baocao' ? <GradeReport /> : (
+                        {tab === 'baocao' ? <GradeReport /> : 
+                         tab === 'dekiemtra' ? <QuizCreator /> : (
                             <div className="flex flex-col h-full animate-in">
                                 <div className="p-10 flex-1 overflow-y-auto custom-scroll pb-48">
                                     <header className="mb-12">
@@ -205,48 +338,30 @@
                                         <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Kho lưu trữ tài liệu giáo án điện tử</p>
                                     </header>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl">
-                                        {notes.filter(n => n.category === tab).map(n => (
+                                        {notes.map(n => (
                                             <div key={n.id} className="neo-card p-8 group relative">
-                                                <button 
-                                                    onClick={() => {if(confirm('Xóa tài liệu này?')) db.collection("notes").doc(n.id).delete()}}
-                                                    className="absolute top-6 right-6 text-slate-300 hover:text-rose-500 transition-colors"
-                                                >✕</button>
+                                                <button onClick={() => {if(confirm('Xóa?')) db.collection("notes").doc(n.id).delete()}} className="absolute top-6 right-6 text-slate-300 hover:text-rose-500 transition-colors">✕</button>
                                                 <div className="text-[10px] font-black text-blue-500 uppercase mb-4 tracking-widest">{n.displayDate}</div>
                                                 <p className="font-bold text-slate-700 mb-6 text-lg leading-snug">{n.content}</p>
                                                 {n.fileUrl && (
                                                     <a href={n.fileUrl} target="_blank" className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-black text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all">
-                                                        <span className="text-xl">📄</span>
-                                                        <span className="truncate">{n.fileName}</span>
+                                                        <span>📄</span><span className="truncate">{n.fileName}</span>
                                                     </a>
                                                 )}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
-
-                                {/* INPUT DOCK */}
                                 <div className="absolute bottom-0 left-0 right-0 p-8 glass-blur">
                                     <form onSubmit={handleUpload} className="max-w-4xl mx-auto bg-white rounded-[2.5rem] p-3 shadow-2xl border border-slate-200 flex items-center gap-4">
-                                        <textarea 
-                                            value={text} 
-                                            onChange={e => setText(e.target.value)} 
-                                            placeholder={`Ghi chú hoặc tên tài liệu ${MENU.find(m => m.id === tab).name}...`} 
-                                            className="flex-1 p-4 outline-none resize-none h-14 text-sm font-bold text-slate-700" 
-                                        />
+                                        <textarea value={text} onChange={e => setText(e.target.value)} placeholder={`Ghi chú tài liệu ${MENU.find(m => m.id === tab).name}...`} className="flex-1 p-4 outline-none resize-none h-14 text-sm font-bold text-slate-700" />
                                         <div className="flex items-center gap-3 pr-2">
                                             <input type="file" className="hidden" ref={fileInputRef} onChange={e => setFile(e.target.files[0])} />
-                                            <button 
-                                                type="button" 
-                                                onClick={() => fileInputRef.current.click()} 
-                                                className={`p-4 rounded-2xl transition-all ${file ? 'bg-emerald-50 text-emerald-600 font-black text-[10px]' : 'text-slate-300 hover:text-blue-600'}`}
-                                            >
-                                                {file ? 'ĐÃ CHỌN FILE' : '📎'}
+                                            <button type="button" onClick={() => fileInputRef.current.click()} className={`p-4 rounded-2xl transition-all ${file ? 'bg-emerald-50 text-emerald-600 font-black text-[10px]' : 'text-slate-300 hover:text-blue-600'}`}>
+                                                {file ? 'ĐÃ CHỌN' : '📎'}
                                             </button>
-                                            <button 
-                                                disabled={uploading || (!text.trim() && !file)} 
-                                                className="h-14 px-10 bg-blue-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-blue-100 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none"
-                                            >
-                                                {uploading ? 'ĐANG TẢI...' : 'LƯU TÀI LIỆU'}
+                                            <button disabled={uploading} className="h-14 px-10 bg-blue-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest disabled:bg-slate-100">
+                                                {uploading ? '...' : 'LƯU'}
                                             </button>
                                         </div>
                                     </form>
