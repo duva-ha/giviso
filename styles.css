@@ -1,0 +1,119 @@
+/* --- PHÔNG CHỮ & NỀN TẢNG --- */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --primary: #2563eb;
+    --primary-hover: #1d4ed8;
+    --bg-light: #f8fafc;
+    --border-color: #e2e8f0;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-light);
+    color: #1e293b;
+    margin: 0;
+    overflow: hidden; /* Giữ khung cố định để tạo hiệu ứng Dashboard */
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- HIỆU ỨNG SIDEBAR ACTIVE --- */
+.sidebar-active {
+    background: var(--primary) !important;
+    color: white !important;
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+    transform: translateX(4px);
+}
+
+/* --- THIẾT KẾ THẺ (CARD) --- */
+.neo-card {
+    background: white;
+    border-radius: 1.5rem;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.neo-card:hover {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+}
+
+/* --- THANH CUỘN TÙY CHỈNH (CUSTOM SCROLLBAR) --- */
+.custom-scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    transition: background 0.3s;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* --- HIỆU ỨNG KÍNH MỜ (GLASSMORPHISM) --- */
+.glass-blur {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border-color);
+}
+
+/* --- TRANG TRÍ BẢNG ĐIỂM & XEM TRƯỚC --- */
+.preview-card {
+    border-left: 4px solid var(--primary);
+    transition: all 0.2s ease;
+}
+
+.preview-card:hover {
+    border-left-width: 8px;
+    background-color: #ffffff;
+}
+
+/* --- HIỆU ỨNG CHUYỂN TAB (ANIMATION) --- */
+.animate-in {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- ĐỊNH DẠNG BẢNG (TABLES) --- */
+table {
+    border-spacing: 0;
+    width: 100%;
+}
+
+th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f8fafc;
+}
+
+tr:last-child td:first-child { border-bottom-left-radius: 1.5rem; }
+tr:last-child td:last-child { border-bottom-right-radius: 1.5rem; }
+
+/* --- TRẠNG THÁI LOADING --- */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
