@@ -1,38 +1,33 @@
 const GradeReport = ({ results = [] }) => {
-    // 1. Khai báo trạng thái để lọc bài thi
     const [selectedQuiz, setSelectedQuiz] = React.useState("all");
 
-    // 2. Tự động gom danh sách tên bài thi (Dùng dấu ? để bảo vệ mảng)
     const quizNames = [...new Set(results?.map(r => r.quizTitle) || [])];
 
-    // 3. Lọc danh sách hiển thị
     const filteredResults = selectedQuiz === "all" 
         ? (results || []) 
         : (results?.filter(r => r.quizTitle === selectedQuiz) || []);
 
-    // 4. Hàm xử lý xuất Excel
     const handleExport = () => {
         if (!filteredResults || filteredResults.length === 0) return alert("Không có dữ liệu để xuất!");
 
         const excelRows = filteredResults.map((item, index) => ({
             "STT": index + 1,
-            "Học sinh": item.userName,
-            "Lớp": item.grade,
-            "Bài kiểm tra": item.quizTitle,
-            "Điểm số": item.point,
-            "Tỉ lệ đúng": item.detail,
-            "Ngày nộp bài": item.timestamp ? new Date(item.timestamp).toLocaleString('vi-VN') : "---"
+            "TÊN NGƯỜI LÀM": item.userName, // Tên người làm
+            "LỚP": item.grade || "---",
+            "BÀI KIỂM TRA": item.quizTitle,
+            "ĐIỂM SỐ": item.point,          // Điểm
+            "KẾT QUẢ": item.detail,
+            "NGÀY GIỜ HOÀN THÀNH": item.timestamp ? new Date(item.timestamp).toLocaleString('vi-VN') : "---" // Ngày giờ
         }));
 
         const worksheet = XLSX.utils.json_to_sheet(excelRows);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "DiemSo");
 
-        const fileName = `Diem_${selectedQuiz === 'all' ? 'TongHop' : selectedQuiz.replace(/\s+/g, '_')}.xlsx`;
+        const fileName = `BangDiem_${selectedQuiz === 'all' ? 'TongHop' : selectedQuiz.replace(/\s+/g, '_')}.xlsx`;
         XLSX.writeFile(workbook, fileName);
     };
 
-    // CHỐT CHẶN: Nếu kết quả rỗng thì hiện màn hình chờ thay vì làm trắng trang
     if (!results || results.length === 0) {
         return (
             <div className="p-20 text-center flex flex-col items-center justify-center bg-white rounded-[3rem] shadow-xl">
@@ -45,7 +40,6 @@ const GradeReport = ({ results = [] }) => {
 
     return (
         <div className="p-6 bg-white rounded-[3rem] shadow-xl border border-slate-100 animate-in fade-in duration-500">
-            {/* THANH ĐIỀU KHIỂN */}
             <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                 <div className="flex items-center gap-4">
                     <h2 className="text-2xl font-black text-slate-800 uppercase italic">Báo cáo điểm số</h2>
@@ -69,15 +63,14 @@ const GradeReport = ({ results = [] }) => {
                 </button>
             </div>
 
-            {/* BẢNG ĐIỂM */}
             <div className="overflow-x-auto custom-scroll">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-slate-800 text-white">
-                            <th className="p-5 text-[10px] font-black uppercase rounded-tl-3xl tracking-widest">Học sinh</th>
+                            <th className="p-5 text-[10px] font-black uppercase rounded-tl-3xl tracking-widest">Người làm bài</th>
                             <th className="p-5 text-[10px] font-black uppercase tracking-widest">Bài thi</th>
-                            <th className="p-5 text-[10px] font-black uppercase tracking-widest">Điểm</th>
-                            <th className="p-5 text-[10px] font-black uppercase rounded-tr-3xl text-right tracking-widest">Ngày nộp</th>
+                            <th className="p-5 text-[10px] font-black uppercase tracking-widest">Điểm số</th>
+                            <th className="p-5 text-[10px] font-black uppercase rounded-tr-3xl text-right tracking-widest">Ngày giờ xong</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -92,8 +85,9 @@ const GradeReport = ({ results = [] }) => {
                                         {res.quizTitle}
                                     </span>
                                 </td>
-                                <td className="p-5 font-black text-xl text-slate-800">{res.point}</td>
-                                <td className="p-5 text-[11px] font-bold text-slate-400 text-right">
+                                {/* Cột điểm được làm nổi bật với màu đỏ đậm */}
+                                <td className="p-5 font-black text-2xl text-red-600">{res.point}</td>
+                                <td className="p-5 text-[11px] font-bold text-slate-500 text-right italic">
                                     {res.timestamp ? new Date(res.timestamp).toLocaleString('vi-VN') : '---'}
                                 </td>
                             </tr>
