@@ -1,56 +1,96 @@
 const GradeReport = ({ results }) => {
-    const [filterQuiz, setFilterQuiz] = React.useState("all");
+    // 1. Khai báo trạng thái để lọc bài thi
+    const [selectedQuiz, setSelectedQuiz] = React.useState("all");
 
-    // Lấy danh sách các tên bài tập duy nhất để làm menu lọc
-    const quizList = [...new Set(results.map(r => r.quizTitle))];
+    // 2. Tự động gom danh sách các tên bài thi hiện có (không trùng lặp)
+    const quizNames = [...new Set(results.map(r => r.quizTitle))];
 
-    // Lọc dữ liệu theo bài được chọn
-    const filteredResults = filterQuiz === "all" 
+    // 3. Lọc danh sách hiển thị dựa trên lựa chọn của thầy
+    const filteredResults = selectedQuiz === "all" 
         ? results 
-        : results.filter(r => r.quizTitle === filterQuiz);
+        : results.filter(r => r.quizTitle === selectedQuiz);
 
+    // 4. Hàm xử lý xuất Excel
     const handleExport = () => {
-        if (filteredResults.length === 0) return alert("Không có dữ liệu!");
+        if (filteredResults.length === 0) return alert("Không có dữ liệu để xuất!");
 
-        const data = filteredResults.map((item, index) => ({
+        // Định dạng dữ liệu để đưa vào file Excel
+        const excelRows = filteredResults.map((item, index) => ({
             "STT": index + 1,
             "Học sinh": item.userName,
             "Lớp": item.grade,
             "Bài kiểm tra": item.quizTitle,
-            "Điểm": item.point,
-            "Tỉ lệ": item.detail,
-            "Ngày nộp": new Date(item.timestamp).toLocaleString('vi-VN')
+            "Điểm số": item.point,
+            "Tỉ lệ đúng": item.detail,
+            "Ngày nộp bài": new Date(item.timestamp).toLocaleString('vi-VN')
         }));
 
-        const worksheet = XLSX.utils.json_to_sheet(data);
+        const worksheet = XLSX.utils.json_to_sheet(excelRows);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "KetQua");
-        XLSX.writeFile(workbook, `Diem_${filterQuiz === 'all' ? 'TongHop' : filterQuiz}.xlsx`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, "DiemSo");
+
+        // Tên file sẽ thay đổi theo bài thi thầy chọn
+        const fileName = `Diem_${selectedQuiz === 'all' ? 'TongHop' : selectedQuiz.replace(/\s+/g, '_')}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
     };
 
     return (
-        <div className="p-6">
-            <div className="flex justify-between items-center mb-6">
-                <div className="flex gap-4 items-center">
-                    <h2 className="text-xl font-bold">Báo cáo điểm số</h2>
+        <div className="p-6 bg-white rounded-[2rem] shadow-xl border border-slate-100">
+            {/* THANH ĐIỀU KHIỂN BÁO CÁO */}
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div className="flex items-center gap-4">
+                    <h2 className="text-2xl font-black text-slate-800 uppercase italic">Báo cáo điểm số</h2>
+                    
+                    {/* MENU CHỌN BÀI THI */}
                     <select 
-                        className="p-2 border rounded-xl font-bold"
-                        value={filterQuiz}
-                        onChange={(e) => setFilterQuiz(e.target.value)}
+                        value={selectedQuiz} 
+                        onChange={(e) => setSelectedQuiz(e.target.value)}
+                        className="px-4 py-2 border-2 border-slate-100 rounded-xl font-bold text-blue-600 outline-none focus:border-blue-500 bg-slate-50"
                     >
-                        <option value="all">Tất cả bài tập</option>
-                        {quizList.map(name => <option key={name} value={name}>{name}</option>)}
+                        <option value="all">-- Tất cả bài tập --</option>
+                        {quizNames.map(name => (
+                            <option key={name} value={name}>{name}</option>
+                        ))}
                     </select>
                 </div>
+
+                {/* NÚT XUẤT EXCEL TỔNG HỢP HOẶC RIÊNG LẺ */}
                 <button 
                     onClick={handleExport}
-                    className="bg-green-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-green-200"
+                    className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-2xl font-black shadow-lg shadow-green-100 flex items-center gap-2 transition-all active:scale-95"
                 >
-                    📊 Xuất Excel {filterQuiz !== 'all' ? `bài ${filterQuiz}` : ''}
+                    📥 XUẤT EXCEL {selectedQuiz !== 'all' ? 'BÀI NÀY' : 'TẤT CẢ'}
                 </button>
             </div>
 
-            {/* Phần hiển thị bảng điểm của thầy giữ nguyên ở đây */}
+            {/* BẢNG HIỂN THỊ ĐIỂM (Dùng filteredResults để hiển thị) */}
+            <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-slate-800 text-white">
+                            <th className="p-4 text-xs font-black uppercase rounded-tl-2xl">Học sinh</th>
+                            <th className="p-4 text-xs font-black uppercase">Bài thi</th>
+                            <th className="p-4 text-xs font-black uppercase">Điểm</th>
+                            <th className="p-4 text-xs font-black uppercase rounded-tr-2xl text-right">Ngày nộp</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                        {filteredResults.map((res, i) => (
+                            <tr key={i} className="hover:bg-blue-50/50 transition-colors">
+                                <td className="p-4">
+                                    <div className="font-bold text-slate-700">{res.userName}</div>
+                                    <div className="text-[10px] text-slate-400 font-medium">{res.userEmail}</div>
+                                </td>
+                                <td className="p-4 text-sm font-bold text-blue-600">{res.quizTitle}</td>
+                                <td className="p-4 font-black text-slate-800">{res.point}</td>
+                                <td className="p-4 text-xs font-bold text-slate-400 text-right">
+                                    {new Date(res.timestamp).toLocaleString('vi-VN')}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 };
