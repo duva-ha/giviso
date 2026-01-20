@@ -1,158 +1,168 @@
-function QuizCreator({ db, firebase }) {
+const { useState, useEffect } = React;
+
+const QuizCreator = ({ db, firebase }) => {
+    const [quizTitle, setQuizTitle] = useState("");
+    const [grade, setGrade] = useState("10");
+    const [time, setTime] = useState(15);
     const [rawText, setRawText] = useState("");
-    const [isSaving, setIsSaving] = useState(false);
-    const [quizConfig, setQuizConfig] = useState({
-        title: "",
-        time: 15,
-        grade: "12",
-        shuffleQuestions: false,
-        shuffleOptions: false,
-        questions: []
-    });
+    const [history, setHistory] = useState([]); // Danh sách đề đã lưu
+    const [view, setView] = useState("create"); // 'create' hoặc 'history'
 
-    // --- LOGIC TỰ ĐỘNG PHÂN TÍCH ĐỀ THI ---
+    // 1. Lấy lịch sử đề thi từ Firebase
     useEffect(() => {
-        if (!rawText.trim()) {
-            setQuizConfig(prev => ({ ...prev, questions: [] }));
-            return;
-        }
-
-        // Tách câu dựa trên chữ "Câu X:" hoặc "Câu X."
-        const parts = rawText.split(/Câu\s*\d+[:.]/g).filter(p => p.trim().length > 5);
-        
-        const parsed = parts.map(part => {
-            const lines = part.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-            const questionText = lines[0]; // Dòng đầu là nội dung câu hỏi
-            
-            // Lọc ra các dòng đáp án: chấp nhận cả "A." và "*A."
-            const optionLines = lines.filter(l => /^[A-D][.:)]|^\*[A-D][.:)]/.test(l));
-            
-            let correct = 0;
-            const options = optionLines.map((line, index) => {
-                // Kiểm tra nếu đáp án bắt đầu bằng dấu *
-                if (line.startsWith('*')) {
-                    correct = index;
-                    // Xóa cụm *A. hoặc *A: để lấy nội dung text
-                    return line.replace(/^\*[A-D][.:)]\s*/, "");
-                }
-                // Nếu không có *, xóa cụm A. hoặc A:
-                return line.replace(/^[A-D][.:)]\s*/, "");
+        const unsub = db.collection("quizzes_history")
+            .orderBy("createdAt", "desc")
+            .onSnapshot(s => {
+                setHistory(s.docs.map(d => ({ id: d.id, ...d.data() })));
             });
+        return () => unsub();
+    }, []);
 
-            return { 
-                q: questionText, 
-                a: options.length > 0 ? options : ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"], 
-                c: correct 
-            };
+    // 2. Hàm phân tích văn bản thành mảng câu hỏi
+    const parseQuestions = (text) => {
+        const parts = text.split(/Câu\s*\d+[:.]/i).filter(p => p.trim());
+        return parts.map(p => {
+            const lines = p.trim().split('\n');
+            const qText = lines[0].trim();
+            const options = lines.slice(1).map(l => l.replace(/^[A-D][:.]\s*/i, '').trim());
+            const correctLine = lines.find(l => l.startsWith('*'));
+            const correctIdx = lines.slice(1).indexOf(correctLine);
+            return { q: qText, a: options.map(o => o.replace('*', '')), c: correctIdx };
         });
+    };
 
-        setQuizConfig(prev => ({ ...prev, questions: parsed }));
-    }, [rawText]);
-
-    // --- HÀM LƯU ĐỀ LÊN FIREBASE ---
+    // 3. Hàm phát đề và lưu vào lịch sử
     const handlePublish = async () => {
-        if (!quizConfig.title || quizConfig.questions.length === 0) {
-            alert("Thầy hãy nhập tiêu đề bài thi và nội dung câu hỏi nhé!");
-            return;
-        }
+        const questions = parseQuestions(rawText);
+        if (!quizTitle || questions.length === 0) return alert("Vui lòng nhập đủ tên đề và nội dung!");
 
-        setIsSaving(true);
+        const quizData = {
+            title: quizTitle,
+            grade: grade,
+            time: parseInt(time) * 60,
+            questions: questions,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
         try {
-            await db.collection("quizzes").add({
-                ...quizConfig,
-                time: quizConfig.time * 60, // Chuyển sang giây
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            alert("✅ Đã phát đề thành công! Học sinh đã có thể vào làm bài.");
-            setRawText("");
-            setQuizConfig(prev => ({ ...prev, title: "", questions: [] }));
-        } catch (e) {
-            alert("Lỗi khi lưu đề: " + e.message);
-        } finally {
-            setIsSaving(false);
-        }
+            // Phát lên Live cho học sinh
+            await db.collection("live_quizzes").doc(grade).set(quizData);
+            // Lưu vào kho lưu trữ cá nhân của thầy
+            await db.collection("quizzes_history").add(quizData);
+            
+            alert("🚀 Đã phát đề thành công!");
+            setRawText(""); setQuizTitle("");
+        } catch (e) { alert("Lỗi hệ thống!"); }
     };
 
     return (
-        <div className="flex h-full gap-8 p-8 overflow-hidden bg-slate-50 animate-in">
-            {/* CỘT TRÁI: NHẬP LIỆU */}
-            <div className="flex-1 flex flex-col gap-6">
-                <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm space-y-6">
-                    <div className="relative">
-                        <input 
-                            className="w-full text-3xl font-black outline-none border-b-4 border-slate-50 focus:border-blue-600 pb-3 transition-all placeholder-slate-200" 
-                            placeholder="Tên bài kiểm tra..." 
-                            value={quizConfig.title}
-                            onChange={e => setQuizConfig({...quizConfig, title: e.target.value})}
-                        />
-                    </div>
-                    
-                    <div className="flex items-center gap-8">
-                        <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Khối</span>
-                            <select value={quizConfig.grade} onChange={e => setQuizConfig({...quizConfig, grade: e.target.value})} className="bg-slate-100 px-4 py-2 rounded-xl font-bold text-xs outline-none focus:ring-2 ring-blue-500/20">
-                                <option value="10">Khối 10</option>
-                                <option value="11">Khối 11</option>
-                                <option value="12">Khối 12</option>
-                            </select>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Thời gian (Phút)</span>
-                            <input type="number" value={quizConfig.time} onChange={e => setQuizConfig({...quizConfig, time: parseInt(e.target.value) || 0})} className="w-20 bg-slate-100 px-4 py-2 rounded-xl font-bold text-xs outline-none" />
-                        </div>
-                    </div>
-                </div>
-                
-                <div className="flex-1 relative group">
-                    <textarea 
-                        className="w-full h-full p-8 rounded-[3rem] border-2 border-slate-100 shadow-inner outline-none focus:border-blue-500 focus:ring-8 ring-blue-500/5 resize-none font-medium text-slate-600 custom-scroll transition-all"
-                        placeholder={"SOẠN ĐỀ TẠI ĐÂY...\n\nVí dụ:\nCâu 1: Đâu là thủ đô Việt Nam?\n*A. Hà Nội\nB. Đà Nẵng\nC. TP.HCM"}
-                        value={rawText}
-                        onChange={e => setRawText(e.target.value)}
-                    />
-                </div>
+        <div className="flex flex-col h-full bg-slate-50">
+            {/* THANH ĐIỀU HƯỚNG TAB CON */}
+            <div className="flex gap-4 p-6 bg-white border-b shadow-sm">
+                <button 
+                    onClick={() => setView("create")}
+                    className={`px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${view === 'create' ? 'bg-blue-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}
+                >
+                    ✨ Soạn đề mới
+                </button>
+                <button 
+                    onClick={() => setView("history")}
+                    className={`px-6 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${view === 'history' ? 'bg-orange-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}
+                >
+                    📚 Kho đề đã lưu ({history.length})
+                </button>
             </div>
 
-            {/* CỘT PHẢI: BẢN XEM TRƯỚC (PREVIEW) */}
-            <div className="w-[480px] flex flex-col">
-                <div className="flex-1 bg-white rounded-[3rem] p-8 overflow-y-auto custom-scroll border-2 border-dashed border-slate-200 relative">
-                    <div className="sticky top-0 bg-white/90 backdrop-blur pb-4 mb-4 border-b border-slate-50 z-10 flex justify-between items-center">
-                        <h3 className="font-black text-[10px] uppercase text-slate-400 tracking-[0.3em]">Bản xem trước ({quizConfig.questions.length})</h3>
-                        {quizConfig.questions.length > 0 && <span className="bg-emerald-500 w-2 h-2 rounded-full animate-pulse"></span>}
-                    </div>
-                    
-                    {quizConfig.questions.length === 0 ? (
-                        <div className="h-full flex flex-col items-center justify-center text-slate-200">
-                            <span className="text-8xl mb-6">🖋️</span>
-                            <p className="font-black text-[10px] uppercase tracking-widest">Đang đợi thầy nhập nội dung đề...</p>
+            <div className="flex-1 overflow-y-auto p-6">
+                {view === "create" ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+                        {/* BÊN TRÁI: KHU VỰC NHẬP LIỆU */}
+                        <div className="space-y-6">
+                            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                                <input 
+                                    placeholder="Tên bài kiểm tra..." 
+                                    className="w-full text-2xl font-black text-slate-800 outline-none mb-6 border-b-2 border-slate-50 focus:border-blue-500 pb-2 transition-all"
+                                    value={quizTitle} onChange={e => setQuizTitle(e.target.value)}
+                                />
+                                <div className="flex gap-4 mb-6">
+                                    <select value={grade} onChange={e => setGrade(e.target.value)} className="bg-slate-50 px-4 py-2 rounded-xl font-bold text-blue-600 outline-none">
+                                        <option value="10">Khối 10</option><option value="11">Khối 11</option><option value="12">Khối 12</option>
+                                    </select>
+                                    <div className="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl">
+                                        <span className="text-xs font-bold text-slate-400">THỜI GIAN:</span>
+                                        <input type="number" value={time} onChange={e => setTime(e.target.value)} className="w-12 bg-transparent font-black text-blue-600 outline-none text-center"/>
+                                        <span className="text-[10px] font-bold text-slate-400 uppercase">Phút</span>
+                                    </div>
+                                </div>
+                                <textarea 
+                                    placeholder="Ví dụ:&#10;Câu 1: Thủ đô Việt Nam?&#10;*A. Hà Nội&#10;B. Đà Nẵng"
+                                    className="w-full h-80 bg-slate-50 p-6 rounded-3xl text-sm font-medium text-slate-600 outline-none border-2 border-transparent focus:border-blue-100 transition-all resize-none"
+                                    value={rawText} onChange={e => setRawText(e.target.value)}
+                                />
+                                <button 
+                                    onClick={handlePublish}
+                                    className="w-full mt-6 bg-slate-900 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl active:scale-95"
+                                >
+                                    🚀 Phát đề lên Student Hub
+                                </button>
+                            </div>
                         </div>
-                    ) : (
-                        quizConfig.questions.map((q, i) => (
-                            <div key={i} className="bg-slate-50/50 p-6 rounded-[2rem] mb-6 border border-slate-100 preview-card group">
-                                <p className="font-bold text-slate-800 text-sm mb-4 leading-relaxed line-clamp-3">{i + 1}. {q.q}</p>
-                                <div className="space-y-2">
-                                    {q.a.map((opt, idx) => (
-                                        <div key={idx} className={`text-[10px] p-3 rounded-2xl font-bold flex items-center gap-3 transition-all ${q.c === idx ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200 scale-[1.02]' : 'bg-white text-slate-400 border border-slate-100'}`}>
-                                            <span className={`w-6 h-6 rounded-lg flex items-center justify-center ${q.c === idx ? 'bg-white/20' : 'bg-slate-100'}`}>
-                                                {String.fromCharCode(65 + idx)}
-                                            </span>
-                                            {opt}
+
+                        {/* BÊN PHẢI: XEM TRƯỚC TỨC THỜI */}
+                        <div className="bg-white p-8 rounded-[2.5rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
+                            {rawText ? (
+                                <div className="w-full text-left space-y-4 overflow-y-auto max-h-[600px] px-2">
+                                    <h3 className="font-black text-slate-400 uppercase text-[10px] tracking-[0.2em] mb-4">Bản xem trước ({parseQuestions(rawText).length} câu)</h3>
+                                    {parseQuestions(rawText).map((q, i) => (
+                                        <div key={i} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                            <div className="font-bold text-slate-800 text-sm mb-2">{i+1}. {q.q}</div>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {q.a.map((opt, idx) => (
+                                                    <div key={idx} className={`text-[10px] p-2 rounded-lg font-bold ${idx === q.c ? 'bg-green-100 text-green-700' : 'bg-white text-slate-400'}`}>
+                                                        {String.fromCharCode(65+idx)}. {opt}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
+                            ) : (
+                                <>
+                                    <div className="text-5xl mb-4">✍️</div>
+                                    <p className="text-slate-400 font-bold italic text-sm">Đang đợi nội dung soạn thảo...</p>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    /* KHO ĐỀ ĐÃ LƯU */
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                        {history.map((q, i) => (
+                            <div key={i} className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 hover:shadow-md transition-all group">
+                                <div className="flex justify-between items-start mb-4">
+                                    <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-[9px] font-black uppercase">Khối {q.grade}</span>
+                                    <span className="text-[9px] font-bold text-slate-300 italic">{q.createdAt?.toDate().toLocaleDateString('vi-VN')}</span>
+                                </div>
+                                <h4 className="font-black text-slate-700 mb-4 line-clamp-2 uppercase text-xs leading-relaxed">{q.title}</h4>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => { setQuizTitle(q.title); setRawText(q.questions.map((c,idx) => `Câu ${idx+1}: ${c.q}\n${c.a.map((opt,oidx) => (oidx === c.c ? '*' : '') + String.fromCharCode(65+oidx) + '. ' + opt).join('\n')}`).join('\n\n')); setView('create'); }}
+                                        className="flex-1 bg-slate-50 text-slate-500 py-2 rounded-xl font-bold text-[10px] hover:bg-blue-50 hover:text-blue-600 transition-all"
+                                    >
+                                        Sửa đề
+                                    </button>
+                                    <button 
+                                        onClick={async () => { await db.collection("live_quizzes").doc(q.grade).set(q); alert("🚀 Đã tái phát đề!"); }}
+                                        className="flex-1 bg-slate-900 text-white py-2 rounded-xl font-black text-[10px] hover:bg-green-600 transition-all"
+                                    >
+                                        Phát lại
+                                    </button>
+                                </div>
                             </div>
-                        ))
-                    )}
-                </div>
-
-                <button 
-                    onClick={handlePublish}
-                    disabled={isSaving || quizConfig.questions.length === 0}
-                    className="mt-6 w-full py-6 bg-slate-900 text-white rounded-[2rem] font-black uppercase tracking-[0.3em] shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:bg-blue-600 active:scale-95 transition-all duration-300 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
-                >
-                    {isSaving ? "Đang phát đề..." : "PHÁT ĐỀ LÊN STUDENT HUB"}
-                </button>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
-}
+};
