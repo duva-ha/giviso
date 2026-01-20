@@ -12,8 +12,6 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; overflow: hidden; }
         .sidebar-active { background: #2563eb; color: white; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .neo-card { background: white; border-radius: 1.5rem; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -27,13 +25,13 @@
    
     <script src="config.js"></script>
     <script src="Database.js"></script>
+</head>
+<body>
+    <div id="root"></div>
 
     <script type="text/babel" src="Sidebar.js"></script>
     <script type="text/babel" src="QuizCreator.js"></script>
     <script type="text/babel" src="GradeReport.js"></script>
-</head>
-<body>
-    <div id="root"></div>
 
     <script type="text/babel" src="App.js"></script>
 </body>
