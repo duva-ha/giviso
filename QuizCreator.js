@@ -1,6 +1,6 @@
 const { useState, useEffect, useRef } = React;
 
-const QuizCreator = ({ db, firebase }) => {
+const QuizCreator = ({ db, firebase, results = [] }) => {
     const [quizTitle, setQuizTitle] = useState("");
     const [grade, setGrade] = useState("10");
     const [time, setTime] = useState(15);
@@ -9,6 +9,7 @@ const QuizCreator = ({ db, firebase }) => {
     const [view, setView] = useState("create");
     const fileInputRef = useRef(null);
 
+    // 1. TẢI LỊCH SỬ ĐỀ
     useEffect(() => {
         const unsub = db.collection("quizzes_history")
             .orderBy("createdAt", "desc")
@@ -18,6 +19,7 @@ const QuizCreator = ({ db, firebase }) => {
         return () => unsub();
     }, []);
 
+    // 2. NHẬP WORD (HỖ TRỢ GẠCH CHÂN)
     const handleWordImport = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -39,6 +41,7 @@ const QuizCreator = ({ db, firebase }) => {
         reader.readAsArrayBuffer(file);
     };
 
+    // 3. LOGIC PHÂN TÍCH CÂU HỎI
     const parseQuestions = (text) => {
         if (!text) return [];
         const parts = text.split(/Câu\s*\d+[:.]/i).filter(p => p.trim());
@@ -55,6 +58,7 @@ const QuizCreator = ({ db, firebase }) => {
         });
     };
 
+    // 4. PHÁT ĐỀ
     const handlePublish = async () => {
         const questions = parseQuestions(rawText);
         if (!quizTitle || questions.length === 0) return alert("Thiếu tên đề hoặc câu hỏi!");
@@ -71,21 +75,28 @@ const QuizCreator = ({ db, firebase }) => {
         } catch (e) { alert("Lỗi: " + e.message); }
     };
 
-    return (
-        <div className="flex flex-col h-full bg-slate-50 overflow-hidden">
-            {/* THANH ĐIỀU HƯỚNG TỐI ƯU MOBILE */}
-            <div className="flex flex-col sm:flex-row justify-between items-center p-4 lg:p-6 bg-white border-b gap-4">
-                <div className="flex bg-slate-100 p-1 rounded-2xl w-full sm:w-auto">
-                    <button onClick={() => setView("create")} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${view === 'create' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}>Soạn đề</button>
-                    <button onClick={() => setView("history")} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${view === 'history' ? 'bg-white text-orange-500 shadow-sm' : 'text-slate-400'}`}>Kho đề</button>
-                </div>
+    // 5. LOGIC XÓA ĐỀ TRONG KHO
+    const handleDelete = async (id, title) => {
+        if (confirm(`Thầy có chắc muốn xóa vĩnh viễn đề: "${title}"?\n(Hành động này không thể hoàn tác)`)) {
+            try {
+                await db.collection("quizzes_history").doc(id).delete();
+                alert("🗑️ Đã xóa đề khỏi kho lưu trữ.");
+            } catch (e) { alert("Lỗi khi xóa: " + e.message); }
+        }
+    };
 
+    return (
+        <div className="flex flex-col h-full bg-slate-50 overflow-hidden text-left">
+            {/* THANH ĐIỀU HƯỚNG */}
+            <div className="flex flex-col sm:flex-row justify-between items-center p-4 lg:p-6 bg-white border-b gap-4">
+                <div className="flex bg-slate-100 p-1 rounded-2xl w-full sm:w-auto font-black text-left">
+                    <button onClick={() => setView("create")} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all ${view === 'create' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}>Soạn đề</button>
+                    <button onClick={() => setView("history")} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all ${view === 'history' ? 'bg-white text-orange-500 shadow-sm' : 'text-slate-400'}`}>Kho đề</button>
+                </div>
                 {view === "create" && (
                     <div className="w-full sm:w-auto">
                         <input type="file" ref={fileInputRef} onChange={handleWordImport} accept=".docx" className="hidden" />
-                        <button onClick={() => fileInputRef.current.click()} className="w-full bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-emerald-100 flex justify-center items-center gap-2">
-                            📥 Nhập Word
-                        </button>
+                        <button onClick={() => fileInputRef.current.click()} className="w-full bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest flex justify-center items-center gap-2">📥 Nhập Word</button>
                     </div>
                 )}
             </div>
@@ -93,42 +104,30 @@ const QuizCreator = ({ db, firebase }) => {
             <div className="flex-1 overflow-y-auto p-4 lg:p-8">
                 {view === "create" ? (
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 max-w-7xl mx-auto">
-                        {/* CỘT 1: NHẬP LIỆU */}
+                        {/* SOẠN THẢO */}
                         <div className="w-full lg:w-1/2 bg-white p-6 lg:p-10 rounded-[2.5rem] shadow-xl border border-slate-100">
-                            <input placeholder="Tên bài kiểm tra..." className="w-full text-xl lg:text-2xl font-black mb-6 outline-none border-b-4 border-slate-50 focus:border-blue-500 pb-2" value={quizTitle} onChange={e => setQuizTitle(e.target.value)} />
-                            
-                            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                                <div className="flex-1 bg-slate-50 p-4 rounded-2xl">
+                            <input placeholder="Tên bài kiểm tra..." className="w-full text-xl font-black mb-6 outline-none border-b-4 border-slate-50 focus:border-blue-500 pb-2" value={quizTitle} onChange={e => setQuizTitle(e.target.value)} />
+                            <div className="flex gap-4 mb-6">
+                                <div className="flex-1 bg-slate-50 p-4 rounded-2xl text-left">
                                     <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Khối</label>
                                     <select value={grade} onChange={e => setGrade(e.target.value)} className="w-full bg-transparent font-bold text-blue-600 outline-none">
                                         <option value="10">Lớp 10</option><option value="11">Lớp 11</option><option value="12">Lớp 12</option>
                                     </select>
                                 </div>
-                                <div className="flex-1 bg-slate-50 p-4 rounded-2xl">
+                                <div className="flex-1 bg-slate-50 p-4 rounded-2xl text-left">
                                     <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Phút</label>
                                     <input type="number" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-transparent font-black text-blue-600 outline-none" />
                                 </div>
                             </div>
-
-                            <textarea 
-                                placeholder="Câu 1: ...&#10;*A. Đáp án đúng&#10;B. Đáp án sai" 
-                                className="w-full h-[350px] lg:h-[450px] bg-slate-50 p-6 rounded-[2rem] text-base font-medium outline-none focus:bg-white border-2 border-transparent focus:border-blue-100 transition-all resize-none" 
-                                value={rawText} onChange={e => setRawText(e.target.value)} 
-                            />
-                            
-                            <button onClick={handlePublish} className="w-full mt-6 bg-slate-900 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all">
-                                🚀 PHÁT ĐỀ NGAY
-                            </button>
+                            <textarea placeholder="Câu 1: ...&#10;*A. Đúng&#10;B. Sai" className="w-full h-[350px] lg:h-[450px] bg-slate-50 p-6 rounded-[2rem] text-base font-medium outline-none focus:bg-white border-2 border-transparent focus:border-blue-100 transition-all resize-none" value={rawText} onChange={e => setRawText(e.target.value)} />
+                            <button onClick={handlePublish} className="w-full mt-6 bg-slate-900 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all">🚀 PHÁT ĐỀ NGAY</button>
                         </div>
-
-                        {/* CỘT 2: XEM TRƯỚC (Ẩn bớt Padding trên Mobile) */}
-                        <div className="w-full lg:w-1/2 bg-slate-100/50 rounded-[2.5rem] p-4 lg:p-10 border-4 border-dashed border-white overflow-y-visible">
-                            <h3 className="font-black text-slate-400 uppercase text-[10px] tracking-widest mb-6 flex items-center gap-2 px-2">
-                                <span className="w-2 h-2 bg-green-500 rounded-full animate-ping"></span> Xem trước
-                            </h3>
+                        {/* XEM TRƯỚC */}
+                        <div className="w-full lg:w-1/2 bg-slate-100/50 rounded-[2.5rem] p-4 lg:p-10 border-4 border-dashed border-white">
+                            <h3 className="font-black text-slate-400 uppercase text-[10px] tracking-widest mb-6 px-2">Preview trực tiếp</h3>
                             <div className="space-y-4">
                                 {parseQuestions(rawText).map((q, i) => (
-                                    <div key={i} className="bg-white p-5 rounded-[2rem] shadow-sm">
+                                    <div key={i} className="bg-white p-5 rounded-[2rem] shadow-sm text-left">
                                         <div className="font-black text-slate-800 mb-4 text-sm leading-tight">{i+1}. {q.q}</div>
                                         <div className="grid grid-cols-1 gap-2">
                                             {q.a.map((opt, idx) => (
@@ -143,40 +142,65 @@ const QuizCreator = ({ db, firebase }) => {
                         </div>
                     </div>
                 ) : (
-                    /* KHO ĐỀ: Hiển thị Grid linh hoạt */
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-8 max-w-7xl mx-auto">
-                        {history.map((h, i) => (
-                            <div key={i} className="bg-white p-6 rounded-[2rem] shadow-lg border border-slate-50">
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[9px] font-black uppercase">Lớp {h.grade}</span>
-                                    <span className="text-[9px] font-bold text-slate-300">{h.createdAt?.toDate().toLocaleDateString('vi-VN')}</span>
+                    /* KHO ĐỀ (BẢN HOÀN CHỈNH) */
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                        {history.map((h) => {
+                            // Đếm số lượng HS đã làm bài này
+                            const count = results.filter(r => r.quizTitle === h.title).length;
+
+                            return (
+                                <div key={h.id} className="bg-white p-6 rounded-[2.5rem] shadow-xl border border-slate-50 flex flex-col h-full hover:shadow-2xl transition-all">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter text-left">Lớp {h.grade}</span>
+                                        <span className="text-[9px] font-bold text-slate-300">{h.createdAt?.toDate().toLocaleDateString('vi-VN')}</span>
+                                    </div>
+                                    <h4 className="font-black text-slate-800 text-xs mb-4 uppercase line-clamp-2 h-8 text-left">{h.title}</h4>
+                                    
+                                    {/* SỐ LƯỢNG HỌC SINH */}
+                                    <div className="flex items-center gap-2 mb-6 bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                                        <span className="text-lg">👥</span>
+                                        <div className="text-left">
+                                            <div className="text-[8px] font-black text-slate-400 uppercase leading-none">Học sinh đã làm</div>
+                                            <div className="text-sm font-black text-blue-600 leading-none mt-1">{count} em</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 mt-auto">
+                                        <button 
+                                            onClick={() => {
+                                                setQuizTitle(h.title); setGrade(h.grade);
+                                                const reconstructed = h.questions.map((q, idx) => {
+                                                    let qStr = `Câu ${idx+1}: ${q.q}\n`;
+                                                    q.a.forEach((opt, oIdx) => { qStr += `${oIdx === q.c ? '*' : ''}${String.fromCharCode(65+oIdx)}. ${opt}\n`; });
+                                                    return qStr;
+                                                }).join('\n');
+                                                setRawText(reconstructed); setView('create');
+                                            }}
+                                            className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl font-black text-[9px] uppercase hover:bg-blue-600 hover:text-white transition-all"
+                                        >Sửa</button>
+
+                                        {/* NÚT XÓA ĐỀ */}
+                                        <button 
+                                            onClick={() => handleDelete(h.id, h.title)}
+                                            className="px-4 py-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all flex items-center justify-center shadow-sm"
+                                            title="Xóa vĩnh viễn"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                        </button>
+
+                                        <button 
+                                            onClick={async () => {
+                                                if(confirm(`Phát lại đề "${h.title}"?`)) {
+                                                    await db.collection("live_quizzes").doc(String(h.grade)).set({...h, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+                                                    alert("🚀 Đã phát lại thành công!");
+                                                }
+                                            }}
+                                            className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase shadow-lg shadow-slate-100"
+                                        >Phát</button>
+                                    </div>
                                 </div>
-                                <h4 className="font-black text-slate-800 text-xs mb-6 uppercase line-clamp-2 h-8">{h.title}</h4>
-                                <div className="flex gap-2 mt-auto">
-                                    <button 
-                                        onClick={() => {
-                                            setQuizTitle(h.title); setGrade(h.grade);
-                                            const reconstructed = h.questions.map((q, idx) => {
-                                                let qStr = `Câu ${idx+1}: ${q.q}\n`;
-                                                q.a.forEach((opt, oIdx) => { qStr += `${oIdx === q.c ? '*' : ''}${String.fromCharCode(65+oIdx)}. ${opt}\n`; });
-                                                return qStr;
-                                            }).join('\n');
-                                            setRawText(reconstructed); setView('create');
-                                        }}
-                                        className="flex-1 py-3 bg-slate-50 text-slate-400 rounded-xl font-black text-[9px] uppercase hover:bg-blue-600 hover:text-white transition-all"
-                                    >Sửa</button>
-                                    <button 
-                                        onClick={async () => {
-                                            if(confirm(`Phát lại đề này?`)) {
-                                                await db.collection("live_quizzes").doc(h.grade).set({...h, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
-                                                alert("🚀 Đã phát lại!");
-                                            }
-                                        }}
-                                        className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-black text-[9px] uppercase shadow-lg"
-                                    >Phát</button>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
