@@ -7,13 +7,11 @@ function App() {
     const [user, setUser] = useState(null);
     const [tab, setTab] = useState('baocao');
     const [results, setResults] = useState([]); 
-    const [authChecking, setAuthChecking] = useState(true); // Trạng thái đang kiểm tra tài khoản
+    const [authChecking, setAuthChecking] = useState(true);
     
+    // States cho các tính năng phụ (Ghi chú/File)
     const [notes, setNotes] = useState([]);
     const [text, setText] = useState("");
-    const [file, setFile] = useState(null);
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = useRef(null);
 
     // 1. THEO DÕI TRẠNG THÁI ĐĂNG NHẬP
     useEffect(() => {
@@ -24,106 +22,121 @@ function App() {
         return () => unsub();
     }, []);
 
-    // 2. LOGIC LẤY DỮ LIỆU ĐIỂM (Chỉ chạy khi đúng là Admin)
+    // 2. LOGIC LẤY DỮ LIỆU ĐIỂM (Cập nhật Realtime & Khớp tên trường createdAt)
     useEffect(() => {
+        // Chỉ lấy dữ liệu nếu đúng là thầy Hải đăng nhập
         if (!user || user.email !== ADMIN_EMAIL) return;
         
+        console.log("📡 Đang kết nối ngăn tủ quiz_results...");
         const unsubscribe = db.collection("quiz_results")
-            .orderBy("timestamp", "desc")
+            // Sửa từ 'timestamp' thành 'createdAt' để khớp với App Học Sinh
+            .orderBy("createdAt", "desc") 
             .onSnapshot(snapshot => {
                 const data = snapshot.docs.map(doc => ({
                     id: doc.id,
-                    ...doc.data()
+                    ...doc.data(),
+                    // Chống lỗi nếu timestamp chưa kịp trả về từ server
+                    timestamp: doc.data().createdAt || new Date() 
                 }));
-                console.log("📊 Đã nhận dữ liệu điểm:", data.length);
+                console.log("📊 Đã cập nhật danh sách điểm mới:", data.length);
                 setResults(data);
-            }, err => console.error("Lỗi lấy điểm:", err));
+            }, err => {
+                console.error("Lỗi lấy điểm từ Firebase:", err);
+                // Mẹo: Nếu Firebase báo lỗi Index, thầy cần nhấn vào link trong console để tạo Index
+            });
             
         return () => unsubscribe();
     }, [user]);
 
-    // 3. LOGIC LẤY GHI CHÚ
-    useEffect(() => {
-        if (!user || user.email !== ADMIN_EMAIL || ['baocao', 'dekiemtra'].includes(tab)) return;
-        return db.collection("notes")
-            .where("userId", "==", user.uid)
-            .where("category", "==", tab)
-            .onSnapshot(s => {
-                const data = s.docs.map(d => ({id: d.id, ...d.data()}));
-                setNotes(data.sort((a,b) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0)));
-            });
-    }, [user, tab]);
+    // 3. GIAO DIỆN TRẠNG THÁI (LOADING / LOGIN / DENIED)
 
-    // --- CÁC GIAO DIỆN TRẠNG THÁI ---
-
-    // A. Đang tải trang
+    // A. Đang nạp ứng dụng
     if (authChecking) return (
-        <div className="h-screen flex items-center justify-center bg-slate-900">
-            <div className="text-white font-bold animate-pulse uppercase tracking-widest">Giviso đang nạp...</div>
+        <div className="h-screen flex items-center justify-center bg-slate-900 px-6">
+            <div className="flex flex-col items-center">
+                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <div className="text-white font-black uppercase tracking-[0.3em] text-xs animate-pulse">Giviso Pro Loading...</div>
+            </div>
         </div>
     );
 
-    // B. Chưa đăng nhập
+    // B. Màn hình Đăng nhập
     if (!user) return (
         <div className="h-screen flex flex-col items-center justify-center bg-slate-900 p-6 text-center">
-            <div className="text-6xl mb-8 animate-bounce">🛡️</div>
-            <h1 className="text-white text-4xl font-black mb-10 italic uppercase tracking-tighter">Giviso Pro Admin</h1>
+            <div className="text-7xl mb-8 animate-bounce">🛡️</div>
+            <h1 className="text-white text-4xl lg:text-5xl font-black mb-4 italic uppercase tracking-tighter">Giviso Pro</h1>
+            <p className="text-slate-400 font-bold mb-10 uppercase text-[10px] tracking-widest">Hệ thống quản trị giáo dục thông minh</p>
             <button 
                 onClick={() => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())} 
-                className="bg-white px-12 py-5 rounded-[2rem] font-black text-slate-900 shadow-2xl active:scale-95 transition-all flex items-center gap-3 hover:bg-blue-50"
+                className="bg-white px-10 py-5 rounded-2xl font-black text-slate-900 shadow-2xl active:scale-95 transition-all flex items-center gap-4 hover:bg-blue-50"
             >
-                <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="google" />
-                ĐĂNG NHẬP HỆ THỐNG
+                <img src="https://www.google.com/favicon.ico" className="w-6 h-6" alt="google" />
+                ĐĂNG NHẬP ADMIN
             </button>
         </div>
     );
 
-    // C. Đăng nhập sai Email (KHÔNG PHẢI THẦY HẢI)
+    // C. Chặn người lạ (Không phải email của thầy Hải)
     if (user.email !== ADMIN_EMAIL) return (
-        <div className="h-screen flex flex-col items-center justify-center bg-red-50 p-6 text-center animate-in fade-in duration-500">
+        <div className="h-screen flex flex-col items-center justify-center bg-red-50 p-8 text-center">
             <div className="text-8xl mb-6">🚫</div>
-            <h1 className="text-3xl font-black text-red-600 uppercase mb-2">Truy cập bị từ chối</h1>
-            <p className="text-slate-600 font-bold mb-8 max-w-md leading-relaxed">
-                Tài khoản <span className="text-red-500 underline">{user.email}</span> không có quyền quản trị.<br/>
-                Vui lòng đăng nhập bằng Email Admin để tiếp tục.
+            <h1 className="text-3xl font-black text-red-600 uppercase mb-4">Quyền truy cập bị từ chối</h1>
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-red-100 mb-8">
+                <p className="text-slate-500 font-medium mb-2 text-sm">Tài khoản hiện tại:</p>
+                <p className="text-red-500 font-black text-lg underline">{user.email}</p>
+            </div>
+            <p className="text-slate-400 text-xs font-bold uppercase mb-8 leading-loose">
+                Vui lòng liên hệ quản trị viên<br/>hoặc đăng nhập bằng đúng email của thầy Hải.
             </p>
             <button 
                 onClick={() => auth.signOut()} 
-                className="bg-red-600 text-white px-10 py-4 rounded-2xl font-black shadow-xl hover:bg-red-700 transition-all active:scale-95"
+                className="bg-red-600 text-white px-10 py-4 rounded-2xl font-black shadow-xl active:scale-95 transition-all"
             >
-                ĐĂNG XUẤT VÀ THỬ LẠI
+                THOÁT TÀI KHOẢN
             </button>
         </div>
     );
 
-    // D. GIAO DIỆN CHÍNH (Chỉ hiện khi đúng là thầy Hải)
+    // 4. GIAO DIỆN QUẢN TRỊ CHÍNH (ĐÃ TỐI ƯU MOBILE)
     return (
-        <div className="flex h-screen overflow-hidden bg-slate-50">
-            {/* SIDEBAR */}
+        <div className="flex h-screen overflow-hidden bg-slate-50 flex-col lg:flex-row">
+            
+            {/* THANH MENU (SIDEBAR) - Tự co giãn theo màn hình */}
             <Sidebar tab={tab} setTab={setTab} user={user} auth={auth} />
 
             <main className="flex-1 bg-white relative overflow-hidden flex flex-col">
-                {/* HIỂN THỊ CÁC TAB */}
-                <div className="flex-1 overflow-hidden relative">
-                    {tab === 'baocao' && <GradeReport results={results} />}
+                
+                {/* NỘI DUNG CÁC TAB */}
+                <div className="flex-1 overflow-y-auto relative">
+                    {/* Tab Báo cáo điểm: Truyền dữ liệu results đã lấy được */}
+                    {tab === 'baocao' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <GradeReport results={results} />
+                        </div>
+                    )}
                     
-                    {tab === 'dekiemtra' && <QuizCreator db={db} firebase={firebase} />}
+                    {/* Tab Phát đề: Truyền db và firebase để xử lý phát đề */}
+                    {tab === 'dekiemtra' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 h-full">
+                            <QuizCreator db={db} firebase={firebase} />
+                        </div>
+                    )}
                     
+                    {/* Các tab khác đang phát triển */}
                     {!['baocao', 'dekiemtra'].includes(tab) && (
-                        <div className="flex flex-col h-full p-8 animate-in fade-in duration-500 overflow-y-auto">
-                             <h2 className="text-2xl font-black mb-6 uppercase tracking-tight text-slate-800">Quản lý {tab}</h2>
-                             <div className="p-20 border-4 border-dashed border-slate-100 rounded-[3rem] text-center">
-                                <p className="text-slate-300 font-black uppercase italic tracking-widest">Tính năng đang được phát triển...</p>
-                             </div>
+                        <div className="flex flex-col h-full p-6 lg:p-12 items-center justify-center">
+                             <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center text-4xl mb-6">⚙️</div>
+                             <h2 className="text-2xl font-black text-slate-800 uppercase italic">Quản lý {tab}</h2>
+                             <p className="text-slate-400 font-bold mt-4 uppercase text-[10px] tracking-[0.3em]">Feature coming soon</p>
                         </div>
                     )}
                 </div>
+
             </main>
         </div>
     );
 }
 
-// KHỞI CHẠY APP
-const container = document.getElementById('root');
-const root = ReactDOM.createRoot(container);
+// 5. KHỞI CHẠY (RENDER)
+const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
