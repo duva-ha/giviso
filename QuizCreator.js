@@ -9,8 +9,7 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
     const [view, setView] = useState("create");
     const fileInputRef = useRef(null);
 
-    // --- STATE MỚI: THÔNG TIN TRƯỜNG LỚP ĐỂ XUẤT FILE ---
-    const [showExportModal, setShowExportModal] = useState(null); // Lưu đề đang chờ xuất
+    const [showExportModal, setShowExportModal] = useState(null);
     const [exportInfo, setExportInfo] = useState({
         school: "TRƯỜNG THPT ....................",
         department: "TỔ CÔNG NGHỆ",
@@ -18,7 +17,6 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
         examName: "KIỂM TRA ĐỊNH KỲ",
     });
 
-    // --- HELPER: HÀM XÁO TRỘN MẢNG ---
     const shuffleArray = (array) => {
         const newArr = [...array];
         for (let i = newArr.length - 1; i > 0; i--) {
@@ -28,7 +26,58 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
         return newArr;
     };
 
-    // --- LOGIC XUẤT ZIP (CẬP NHẬT HEADER TRƯỜNG LỚP) ---
+    // --- HÀM CHIA CỘT ĐÁP ÁN THÔNG MINH (4 - 2 - 1 CỘT) ---
+    const createOptionsTable = (options) => {
+        const totalLength = options.reduce((sum, opt) => sum + opt.length, 0);
+        const letters = ["A", "B", "C", "D"];
+        
+        // 4 đáp án trên 1 dòng
+        if (totalLength < 65) {
+            return new docx.Table({
+                width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                borders: docx.TableBorders.NONE,
+                rows: [new docx.TableRow({
+                    children: options.map((opt, idx) => new docx.TableCell({
+                        children: [new docx.Paragraph({ text: `${letters[idx]}. ${opt}` })]
+                    }))
+                })]
+            });
+        } 
+        // 2 đáp án trên 1 dòng
+        else if (totalLength < 115) {
+            return new docx.Table({
+                width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                borders: docx.TableBorders.NONE,
+                rows: [
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({ children: [new docx.Paragraph({ text: `A. ${options[0]}` })] }),
+                            new docx.TableCell({ children: [new docx.Paragraph({ text: `B. ${options[1]}` })] })
+                        ]
+                    }),
+                    new docx.TableRow({
+                        children: [
+                            new docx.TableCell({ children: [new docx.Paragraph({ text: `C. ${options[2]}` })] }),
+                            new docx.TableCell({ children: [new docx.Paragraph({ text: `D. ${options[3]}` })] })
+                        ]
+                    })
+                ]
+            });
+        }
+        // Mỗi đáp án 1 dòng
+        else {
+            return new docx.Table({
+                width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                borders: docx.TableBorders.NONE,
+                rows: options.map((opt, idx) => new docx.TableRow({
+                    children: [new docx.TableCell({
+                        children: [new docx.Paragraph({ text: `${letters[idx]}. ${opt}` })]
+                    })]
+                }))
+            });
+        }
+    };
+
     const handleExportZip = async (quiz) => {
         const zip = new JSZip();
         const totalVersions = 4;
@@ -36,15 +85,13 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
         const folderName = `Bo_De_${quiz.title.replace(/\s+/g, '_')}`;
         const folder = zip.folder(folderName);
 
-        alert("⏳ Hệ thống đang trộn đề và tạo file ZIP, thầy đợi chút nhé...");
+        alert("⏳ Đang thiết kế bộ đề quy chuẩn (Times New Roman, 12pt, Giãn dòng 1.3)...");
 
         for (let i = 1; i <= totalVersions; i++) {
             const examCode = 100 + i;
             let shuffledQs = shuffleArray(quiz.questions);
             const readyData = shuffledQs.map(item => {
-                let options = (item.a || item.o || []).map((text, idx) => ({
-                    text, isCorrect: idx === item.c
-                }));
+                let options = (item.a || item.o || []).map((text, idx) => ({ text, isCorrect: idx === item.c }));
                 options = shuffleArray(options);
                 return {
                     q: item.q,
@@ -54,54 +101,90 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
             });
 
             readyData.forEach((q, qIdx) => {
-                allAnswers.push({
-                    "Mã đề": examCode,
-                    "Câu số": qIdx + 1,
-                    "Đáp án đúng": q.correctLetter
-                });
+                allAnswers.push({ "Mã đề": examCode, "Câu số": qIdx + 1, "Đáp án đúng": q.correctLetter });
             });
 
             const doc = new docx.Document({
+                styles: {
+                    default: {
+                        document: {
+                            run: { size: 24, font: "Times New Roman" },
+                            paragraph: { spacing: { line: 312 } }
+                        }
+                    }
+                },
                 sections: [{
                     children: [
-                        // HEADER TRƯỜNG VÀ KỲ THI (Lấy từ exportInfo)
-                        new docx.Paragraph({
-                            children: [
-                                new docx.TextRun({ text: exportInfo.school.toUpperCase(), bold: true }),
-                                new docx.TextRun({ text: "\t\t\t\t" + exportInfo.examName.toUpperCase(), bold: true }),
-                            ],
-                            alignment: docx.AlignmentType.LEFT,
+                        // 1. HEADER BẢNG ẨN 2 CỘT
+                        new docx.Table({
+                            width: { size: 100, type: docx.WidthType.PERCENTAGE },
+                            borders: docx.TableBorders.NONE,
+                            rows: [new docx.TableRow({
+                                children: [
+                                    new docx.TableCell({
+                                        width: { size: 45, type: docx.WidthType.PERCENTAGE },
+                                        children: [
+                                            new docx.Paragraph({ text: exportInfo.school.toUpperCase(), bold: true, alignment: docx.AlignmentType.CENTER }),
+                                            new docx.Paragraph({ text: exportInfo.department.toUpperCase(), bold: true, alignment: docx.AlignmentType.CENTER }),
+                                            new docx.Paragraph({ text: "----------------", alignment: docx.AlignmentType.CENTER }),
+                                        ]
+                                    }),
+                                    new docx.TableCell({
+                                        width: { size: 55, type: docx.WidthType.PERCENTAGE },
+                                        children: [
+                                            new docx.Paragraph({ text: exportInfo.examName.toUpperCase(), bold: true, alignment: docx.AlignmentType.CENTER }),
+                                            new docx.Paragraph({ text: exportInfo.year, alignment: docx.AlignmentType.CENTER }),
+                                            new docx.Paragraph({ text: "Thời gian làm bài: " + (quiz.time/60) + " phút", alignment: docx.AlignmentType.CENTER, italic: true }),
+                                        ]
+                                    })
+                                ]
+                            })]
                         }),
-                        new docx.Paragraph({
-                            children: [
-                                new docx.TextRun({ text: exportInfo.department.toUpperCase() }),
-                                new docx.TextRun({ text: "\t\t\t\t\t" + exportInfo.year }),
-                            ],
-                            alignment: docx.AlignmentType.LEFT,
-                        }),
-                        new docx.Paragraph({ text: "-----------------------", alignment: docx.AlignmentType.LEFT, spacing: { after: 300 } }),
 
                         new docx.Paragraph({ 
-                            text: `BÀI KIỂM TRA: ${quiz.title.toUpperCase()}`, 
+                            text: `BÀI THI: ${quiz.title.toUpperCase()}`, 
                             heading: docx.HeadingLevel.HEADING_1, 
-                            alignment: docx.AlignmentType.CENTER 
+                            alignment: docx.AlignmentType.CENTER, 
+                            bold: true,
+                            spacing: { before: 200 } 
                         }),
                         new docx.Paragraph({ 
-                            text: `Mã đề: ${examCode}`, 
-                            alignment: docx.AlignmentType.CENTER,
-                            spacing: { after: 300 }
+                            text: `(Mã đề thi: ${examCode})`, 
+                            alignment: docx.AlignmentType.CENTER, 
+                            spacing: { after: 200 }, 
+                            bold: true 
                         }),
-                        new docx.Paragraph({ text: "Họ và tên:...................................................... Lớp:..........", spacing: { after: 300 } }),
+                        new docx.Paragraph({ 
+                            children: [
+                                new docx.TextRun({ text: "Họ và tên thí sinh: ", italic: true }),
+                                new docx.TextRun({ text: ".................................................................." }),
+                                new docx.TextRun({ text: " Lớp: ", italic: true }),
+                                new docx.TextRun({ text: "..........." })
+                            ],
+                            spacing: { after: 300 } 
+                        }),
+
+                        // 2. NỘI DUNG CÂU HỎI & CHIA CỘT
                         ...readyData.flatMap((q, idx) => [
                             new docx.Paragraph({ 
-                                text: `Câu ${idx + 1}: ${q.q}`, 
-                                spacing: { before: 200 },
-                                style: "normal"
+                                children: [
+                                    new docx.TextRun({ text: `Câu ${idx + 1}: `, bold: true }), 
+                                    new docx.TextRun({ text: q.q })
+                                ],
+                                spacing: { before: 240 }
                             }),
-                            new docx.Paragraph({ 
-                                text: q.options.map((opt, oIdx) => `${String.fromCharCode(65+oIdx)}. ${opt}`).join("       ") 
-                            })
-                        ])
+                            createOptionsTable(q.options)
+                        ]),
+
+                        // 3. LỜI DẶN & FOOTER
+                        new docx.Paragraph({ text: "", spacing: { before: 400 } }),
+                        new docx.Paragraph({ text: "----------------------- HẾT -----------------------", alignment: docx.AlignmentType.CENTER, bold: true }),
+                        new docx.Paragraph({ 
+                            text: "Thí sinh không được sử dụng tài liệu. Cán bộ coi thi không giải thích gì thêm.", 
+                            alignment: docx.AlignmentType.CENTER, 
+                            italic: true,
+                            spacing: { before: 100 }
+                        })
                     ],
                 }],
             });
@@ -117,11 +200,10 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
         folder.file("Ma_Tran_Dap_An_Chuan.xlsx", excelBuffer);
 
         const content = await zip.generateAsync({ type: "blob" });
-        saveAs(content, `GIVISO_PRO_${quiz.title.replace(/\s+/g, '_')}.zip`);
-        alert("🚀 Xuất ZIP thành công!");
+        saveAs(content, `GIVISO_QUY_CHUAN_${quiz.title.replace(/\s+/g, '_')}.zip`);
+        alert("🚀 Xuất bộ đề QUY CHUẨN thành công!");
     };
 
-    // 1. TẢI LỊCH SỬ ĐỀ
     useEffect(() => {
         const unsub = db.collection("quizzes_history")
             .orderBy("createdAt", "desc")
@@ -131,7 +213,6 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
         return () => unsub();
     }, []);
 
-    // 2. NHẬP WORD
     const handleWordImport = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -153,7 +234,6 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
         reader.readAsArrayBuffer(file);
     };
 
-    // 3. LOGIC PHÂN TÍCH
     const parseQuestions = (text) => {
         if (!text) return [];
         const parts = text.split(/Câu\s*\d+[:.]/i).filter(p => p.trim());
@@ -170,7 +250,6 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
         });
     };
 
-    // 4. PHÁT ĐỀ
     const handlePublish = async () => {
         const questions = parseQuestions(rawText);
         if (!quizTitle || questions.length === 0) return alert("Thiếu tên đề hoặc câu hỏi!");
@@ -198,9 +277,8 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
 
     return (
         <div className="flex flex-col h-full bg-slate-50 overflow-hidden text-left relative">
-            {/* THANH ĐIỀU HƯỚNG */}
             <div className="flex flex-col sm:flex-row justify-between items-center p-4 lg:p-6 bg-white border-b gap-4">
-                <div className="flex bg-slate-100 p-1 rounded-2xl w-full sm:w-auto font-black">
+                <div className="flex bg-slate-100 p-1 rounded-2xl w-full sm:w-auto font-black text-left">
                     <button onClick={() => setView("create")} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all ${view === 'create' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400'}`}>Soạn đề</button>
                     <button onClick={() => setView("history")} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl text-[10px] uppercase tracking-widest transition-all ${view === 'history' ? 'bg-white text-orange-500 shadow-sm' : 'text-slate-400'}`}>Kho đề</button>
                 </div>
@@ -215,21 +293,21 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
             <div className="flex-1 overflow-y-auto p-4 lg:p-8">
                 {view === "create" ? (
                     <div className="flex flex-col lg:flex-row gap-6 lg:gap-10 max-w-7xl mx-auto">
-                        <div className="w-full lg:w-1/2 bg-white p-6 lg:p-10 rounded-[2.5rem] shadow-xl border border-slate-100">
-                            <input placeholder="Tên bài kiểm tra..." className="w-full text-xl font-black mb-6 outline-none border-b-4 border-slate-50 focus:border-blue-500 pb-2" value={quizTitle} onChange={e => setQuizTitle(e.target.value)} />
-                            <div className="flex gap-4 mb-6">
+                        <div className="w-full lg:w-1/2 bg-white p-6 lg:p-10 rounded-[2.5rem] shadow-xl border border-slate-100 text-left">
+                            <input placeholder="Tên bài kiểm tra..." className="w-full text-xl font-black mb-6 outline-none border-b-4 border-slate-50 focus:border-blue-500 pb-2 text-left" value={quizTitle} onChange={e => setQuizTitle(e.target.value)} />
+                            <div className="flex gap-4 mb-6 text-left">
                                 <div className="flex-1 bg-slate-50 p-4 rounded-2xl">
                                     <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Khối</label>
                                     <select value={grade} onChange={e => setGrade(e.target.value)} className="w-full bg-transparent font-bold text-blue-600 outline-none">
                                         <option value="10">Lớp 10</option><option value="11">Lớp 11</option><option value="12">Lớp 12</option>
                                     </select>
                                 </div>
-                                <div className="flex-1 bg-slate-50 p-4 rounded-2xl">
-                                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Phút</label>
+                                <div className="flex-1 bg-slate-50 p-4 rounded-2xl text-left">
+                                    <label className="block text-[9px] font-black text-slate-400 uppercase mb-1">Thời gian (Phút)</label>
                                     <input type="number" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-transparent font-black text-blue-600 outline-none" />
                                 </div>
                             </div>
-                            <textarea placeholder="Câu 1: ...&#10;*A. Đúng&#10;B. Sai" className="w-full h-[350px] lg:h-[450px] bg-slate-50 p-6 rounded-[2rem] text-base font-medium outline-none focus:bg-white border-2 border-transparent focus:border-blue-100 transition-all resize-none shadow-inner" value={rawText} onChange={e => setRawText(e.target.value)} />
+                            <textarea placeholder="Câu 1: Câu hỏi?&#10;*A. Đáp án đúng (có dấu *)&#10;B. Đáp án sai" className="w-full h-[350px] lg:h-[450px] bg-slate-50 p-6 rounded-[2rem] text-base font-medium outline-none focus:bg-white border-2 border-transparent focus:border-blue-100 transition-all resize-none shadow-inner" value={rawText} onChange={e => setRawText(e.target.value)} />
                             <button onClick={handlePublish} className="w-full mt-6 bg-slate-900 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-all">🚀 PHÁT ĐỀ NGAY</button>
                         </div>
                         <div className="w-full lg:w-1/2 bg-slate-100/50 rounded-[2.5rem] p-4 lg:p-10 border-4 border-dashed border-white">
@@ -281,7 +359,6 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
                                             setRawText(reconstructed); setView('create');
                                         }} className="flex-1 py-3 bg-slate-100 text-slate-500 rounded-xl font-black text-[9px] uppercase hover:bg-blue-600 hover:text-white transition-all shadow-sm">Sửa</button>
 
-                                        {/* NÚT MỞ POPUP XUẤT ZIP */}
                                         <button onClick={() => setShowExportModal(h)} className="px-4 py-3 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Xuất 4 đề Word & Đáp án Excel (.zip)">
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                                         </button>
@@ -304,7 +381,6 @@ const QuizCreator = ({ db, firebase, results = [] }) => {
                 )}
             </div>
 
-            {/* --- POPUP NHẬP THÔNG TIN TRƯỜNG LỚP TRƯỚC KHI XUẤT --- */}
             {showExportModal && (
                 <div className="fixed inset-0 z-[1000] bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-6 text-left">
                     <div className="bg-white w-full max-w-lg rounded-[2.5rem] p-8 lg:p-10 shadow-2xl animate-in zoom-in duration-300">
